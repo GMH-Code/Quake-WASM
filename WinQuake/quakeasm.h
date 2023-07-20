@@ -31,7 +31,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #endif
 
-#ifdef __i386__
+#if defined(__i386__) && defined(USE_ASM)
 #define id386	1
 #else
 #define id386	0

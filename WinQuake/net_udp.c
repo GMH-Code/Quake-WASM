@@ -134,9 +134,10 @@ int UDP_OpenSocket (int port)
 	if ((newsocket = socket (PF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
 		return -1;
 
+#if 0
 	if (ioctl (newsocket, FIONBIO, (char *)&_true) == -1)
 		goto ErrorReturn;
-
+#endif
 	address.sin_family = AF_INET;
 	address.sin_addr.s_addr = INADDR_ANY;
 	address.sin_port = htons(port);

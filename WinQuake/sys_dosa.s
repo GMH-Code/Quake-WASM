@@ -6,6 +6,8 @@
 #include "quakeasm.h"
 
 
+#if id386
+
 	.data
 
 	.align	4
@@ -93,3 +95,4 @@ C(Sys_SetFPCW):
 
 	ret
 
+#endif

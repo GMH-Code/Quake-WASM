@@ -25,7 +25,8 @@ ARCH=i386
 endif
 NOARCH=noarch
 
-MOUNT_DIR=/grog/Projects/WinQuake
+#MOUNT_DIR=/grog/Projects/WinQuake
+MOUNT_DIR := $(shell pwd)
 MASTER_DIR=/grog/Projects/QuakeMaster
 MESA_DIR=/usr/local/src/Mesa-2.6
 TDFXGL_DIR = /home/zoid/3dfxgl
@@ -33,8 +34,8 @@ TDFXGL_DIR = /home/zoid/3dfxgl
 BUILD_DEBUG_DIR=debug$(ARCH)$(GLIBC)
 BUILD_RELEASE_DIR=release$(ARCH)$(GLIBC)
 
-EGCS=/usr/local/egcs-1.1.2/bin/gcc
-CC=$(EGCS)
+#EGCS=/usr/local/egcs-1.1.2/bin/gcc
+#CC=$(EGCS)
 
 BASE_CFLAGS=-Dstricmp=strcasecmp
 RELEASE_CFLAGS=$(BASE_CFLAGS) -g -mpentiumpro -O6 -ffast-math -funroll-loops \
@@ -57,18 +58,19 @@ DO_GL_DEBUG_CC=$(CC) $(DEBUG_CFLAGS) $(GLCFLAGS) -o $@ -c $<
 DO_X11_CC=$(CC) $(CFLAGS) $(XCFLAGS) -o $@ -c $<
 DO_X11_DEBUG_CC=$(CC) $(DEBUG_CFLAGS) $(XCFLAGS) -o $@ -c $<
 DO_O_CC=$(CC) -O $(CFLAGS) -o $@ -c $<
-DO_AS=$(CC) $(CFLAGS) -DELF -x assembler-with-cpp -o $@ -c $<
+#DO_AS=$(CC) $(CFLAGS) -DELF -x assembler-with-cpp -o $@ -c $<
+DO_AS=$(CC) $(CFLAGS) -DELF -o $@ -c $<
 DO_GL_AS=$(CC) $(CFLAGS) $(GLCFLAGS) -DELF -x assembler-with-cpp -o $@ -c $<
 
 #############################################################################
 # SETUP AND BUILD
 #############################################################################
 
-TARGETS=$(BUILDDIR)/bin/squake \
+TARGETS=$(BUILDDIR)/bin/quake.x11\
+	$(BUILDDIR)/bin/squake \
 	$(BUILDDIR)/bin/glquake \
 	$(BUILDDIR)/bin/glquake.glx \
 	$(BUILDDIR)/bin/glquake.3dfxgl \
-	$(BUILDDIR)/bin/quake.x11
 	# $(BUILDDIR)/bin/unixded
 
 build_debug:
@@ -410,61 +412,61 @@ $(BUILDDIR)/squake/snd_linux.o :$(MOUNT_DIR)/snd_linux.c
 
 #####
 
-$(BUILDDIR)/squake/d_copy.o :   $(MOUNT_DIR)/d_copy.s
+$(BUILDDIR)/squake/d_copy.o :   $(MOUNT_DIR)/d_copy.S
 	$(DO_AS)
 
-$(BUILDDIR)/squake/d_draw.o :   $(MOUNT_DIR)/d_draw.s
+$(BUILDDIR)/squake/d_draw.o :   $(MOUNT_DIR)/d_draw.S
 	$(DO_AS)
 
-$(BUILDDIR)/squake/d_draw16.o : $(MOUNT_DIR)/d_draw16.s
+$(BUILDDIR)/squake/d_draw16.o : $(MOUNT_DIR)/d_draw16.S
 	$(DO_AS)
 
-$(BUILDDIR)/squake/d_parta.o :  $(MOUNT_DIR)/d_parta.s
+$(BUILDDIR)/squake/d_parta.o :  $(MOUNT_DIR)/d_parta.S
 	$(DO_AS)
 
-$(BUILDDIR)/squake/d_polysa.o : $(MOUNT_DIR)/d_polysa.s
+$(BUILDDIR)/squake/d_polysa.o : $(MOUNT_DIR)/d_polysa.S
 	$(DO_AS)
 
-$(BUILDDIR)/squake/d_scana.o :  $(MOUNT_DIR)/d_scana.s
+$(BUILDDIR)/squake/d_scana.o :  $(MOUNT_DIR)/d_scana.S
 	$(DO_AS)
 
-$(BUILDDIR)/squake/d_spr8.o :   $(MOUNT_DIR)/d_spr8.s
+$(BUILDDIR)/squake/d_spr8.o :   $(MOUNT_DIR)/d_spr8.S
 	$(DO_AS)
 
-$(BUILDDIR)/squake/d_varsa.o :  $(MOUNT_DIR)/d_varsa.s
+$(BUILDDIR)/squake/d_varsa.o :  $(MOUNT_DIR)/d_varsa.S
 	$(DO_AS)
 
-$(BUILDDIR)/squake/math.o :     $(MOUNT_DIR)/math.s
+$(BUILDDIR)/squake/math.o :     $(MOUNT_DIR)/math.S
 	$(DO_AS)
 
-$(BUILDDIR)/squake/r_aliasa.o : $(MOUNT_DIR)/r_aliasa.s
+$(BUILDDIR)/squake/r_aliasa.o : $(MOUNT_DIR)/r_aliasa.S
 	$(DO_AS)
 
-$(BUILDDIR)/squake/r_drawa.o :  $(MOUNT_DIR)/r_drawa.s
+$(BUILDDIR)/squake/r_drawa.o :  $(MOUNT_DIR)/r_drawa.S
 	$(DO_AS)
 
-$(BUILDDIR)/squake/r_edgea.o :  $(MOUNT_DIR)/r_edgea.s
+$(BUILDDIR)/squake/r_edgea.o :  $(MOUNT_DIR)/r_edgea.S
 	$(DO_AS)
 
-$(BUILDDIR)/squake/r_varsa.o :  $(MOUNT_DIR)/r_varsa.s
+$(BUILDDIR)/squake/r_varsa.o :  $(MOUNT_DIR)/r_varsa.S
 	$(DO_AS)
 
-$(BUILDDIR)/squake/surf16.o :   $(MOUNT_DIR)/surf16.s
+$(BUILDDIR)/squake/surf16.o :   $(MOUNT_DIR)/surf16.S
 	$(DO_AS)
 
-$(BUILDDIR)/squake/surf8.o :    $(MOUNT_DIR)/surf8.s
+$(BUILDDIR)/squake/surf8.o :    $(MOUNT_DIR)/surf8.S
 	$(DO_AS)
 
-$(BUILDDIR)/squake/worlda.o :   $(MOUNT_DIR)/worlda.s
+$(BUILDDIR)/squake/worlda.o :   $(MOUNT_DIR)/worlda.S
 	$(DO_AS)
 
-$(BUILDDIR)/squake/r_aclipa.o : $(MOUNT_DIR)/r_aclipa.s
+$(BUILDDIR)/squake/r_aclipa.o : $(MOUNT_DIR)/r_aclipa.S
 	$(DO_AS)
 
-$(BUILDDIR)/squake/snd_mixa.o : $(MOUNT_DIR)/snd_mixa.s
+$(BUILDDIR)/squake/snd_mixa.o : $(MOUNT_DIR)/snd_mixa.S
 	$(DO_AS)
 
-$(BUILDDIR)/squake/sys_dosa.o : $(MOUNT_DIR)/sys_dosa.s
+$(BUILDDIR)/squake/sys_dosa.o : $(MOUNT_DIR)/sys_dosa.S
 	$(DO_AS)
 
 #############################################################################
@@ -783,61 +785,61 @@ $(BUILDDIR)/x11/snd_linux.o :$(MOUNT_DIR)/snd_linux.c
 
 #####
 
-$(BUILDDIR)/x11/d_copy.o :   $(MOUNT_DIR)/d_copy.s
+$(BUILDDIR)/x11/d_copy.o :   $(MOUNT_DIR)/d_copy.S
 	$(DO_AS)
 
-$(BUILDDIR)/x11/d_draw.o :   $(MOUNT_DIR)/d_draw.s
+$(BUILDDIR)/x11/d_draw.o :   $(MOUNT_DIR)/d_draw.S
 	$(DO_AS)
 
-$(BUILDDIR)/x11/d_draw16.o : $(MOUNT_DIR)/d_draw16.s
+$(BUILDDIR)/x11/d_draw16.o : $(MOUNT_DIR)/d_draw16.S
 	$(DO_AS)
 
-$(BUILDDIR)/x11/d_parta.o :  $(MOUNT_DIR)/d_parta.s
+$(BUILDDIR)/x11/d_parta.o :  $(MOUNT_DIR)/d_parta.S
 	$(DO_AS)
 
-$(BUILDDIR)/x11/d_polysa.o : $(MOUNT_DIR)/d_polysa.s
+$(BUILDDIR)/x11/d_polysa.o : $(MOUNT_DIR)/d_polysa.S
 	$(DO_AS)
 
-$(BUILDDIR)/x11/d_scana.o :  $(MOUNT_DIR)/d_scana.s
+$(BUILDDIR)/x11/d_scana.o :  $(MOUNT_DIR)/d_scana.S
 	$(DO_AS)
 
-$(BUILDDIR)/x11/d_spr8.o :   $(MOUNT_DIR)/d_spr8.s
+$(BUILDDIR)/x11/d_spr8.o :   $(MOUNT_DIR)/d_spr8.S
 	$(DO_AS)
 
-$(BUILDDIR)/x11/d_varsa.o :  $(MOUNT_DIR)/d_varsa.s
+$(BUILDDIR)/x11/d_varsa.o :  $(MOUNT_DIR)/d_varsa.S
 	$(DO_AS)
 
-$(BUILDDIR)/x11/math.o :     $(MOUNT_DIR)/math.s
+$(BUILDDIR)/x11/math.o :     $(MOUNT_DIR)/math.S
 	$(DO_AS)
 
-$(BUILDDIR)/x11/r_aliasa.o : $(MOUNT_DIR)/r_aliasa.s
+$(BUILDDIR)/x11/r_aliasa.o : $(MOUNT_DIR)/r_aliasa.S
 	$(DO_AS)
 
-$(BUILDDIR)/x11/r_drawa.o :  $(MOUNT_DIR)/r_drawa.s
+$(BUILDDIR)/x11/r_drawa.o :  $(MOUNT_DIR)/r_drawa.S
 	$(DO_AS)
 
-$(BUILDDIR)/x11/r_edgea.o :  $(MOUNT_DIR)/r_edgea.s
+$(BUILDDIR)/x11/r_edgea.o :  $(MOUNT_DIR)/r_edgea.S
 	$(DO_AS)
 
-$(BUILDDIR)/x11/r_varsa.o :  $(MOUNT_DIR)/r_varsa.s
+$(BUILDDIR)/x11/r_varsa.o :  $(MOUNT_DIR)/r_varsa.S
 	$(DO_AS)
 
-$(BUILDDIR)/x11/surf16.o :   $(MOUNT_DIR)/surf16.s
+$(BUILDDIR)/x11/surf16.o :   $(MOUNT_DIR)/surf16.S
 	$(DO_AS)
 
-$(BUILDDIR)/x11/surf8.o :    $(MOUNT_DIR)/surf8.s
+$(BUILDDIR)/x11/surf8.o :    $(MOUNT_DIR)/surf8.S
 	$(DO_AS)
 
-$(BUILDDIR)/x11/worlda.o :   $(MOUNT_DIR)/worlda.s
+$(BUILDDIR)/x11/worlda.o :   $(MOUNT_DIR)/worlda.S
 	$(DO_AS)
 
-$(BUILDDIR)/x11/r_aclipa.o : $(MOUNT_DIR)/r_aclipa.s
+$(BUILDDIR)/x11/r_aclipa.o : $(MOUNT_DIR)/r_aclipa.S
 	$(DO_AS)
 
-$(BUILDDIR)/x11/snd_mixa.o : $(MOUNT_DIR)/snd_mixa.s
+$(BUILDDIR)/x11/snd_mixa.o : $(MOUNT_DIR)/snd_mixa.S
 	$(DO_AS)
 
-$(BUILDDIR)/x11/sys_dosa.o : $(MOUNT_DIR)/sys_dosa.s
+$(BUILDDIR)/x11/sys_dosa.o : $(MOUNT_DIR)/sys_dosa.S
 	$(DO_AS)
 
 #############################################################################
@@ -1080,16 +1082,16 @@ $(BUILDDIR)/glquake/snd_mix.o :      $(MOUNT_DIR)/snd_mix.c
 $(BUILDDIR)/glquake/snd_linux.o :    $(MOUNT_DIR)/snd_linux.c
 	$(DO_GL_CC)
 
-$(BUILDDIR)/glquake/math.o :         $(MOUNT_DIR)/math.s
+$(BUILDDIR)/glquake/math.o :         $(MOUNT_DIR)/math.S
 	$(DO_GL_AS)
 
-$(BUILDDIR)/glquake/worlda.o :       $(MOUNT_DIR)/worlda.s
+$(BUILDDIR)/glquake/worlda.o :       $(MOUNT_DIR)/worlda.S
 	$(DO_GL_AS)
 
-$(BUILDDIR)/glquake/snd_mixa.o :     $(MOUNT_DIR)/snd_mixa.s
+$(BUILDDIR)/glquake/snd_mixa.o :     $(MOUNT_DIR)/snd_mixa.S
 	$(DO_GL_AS)
 
-$(BUILDDIR)/glquake/sys_dosa.o :     $(MOUNT_DIR)/sys_dosa.s
+$(BUILDDIR)/glquake/sys_dosa.o :     $(MOUNT_DIR)/sys_dosa.S
 	$(DO_GL_AS)
 
 #############################################################################
