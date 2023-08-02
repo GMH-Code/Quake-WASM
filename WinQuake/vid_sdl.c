@@ -1,23 +1,34 @@
 // vid_sdl.h -- sdl video driver 
 
-#include "SDL.h"
+// Updates and SDL2/WASM/32-bit renderer conversions by Gregory Maynard-Hoare
+
+#include <SDL2/SDL.h>
 #include "quakedef.h"
 #include "d_local.h"
 
-viddef_t    vid;                // global video state
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
+extern viddef_t    vid;                // global video state
 unsigned short  d_8to16table[256];
 
 // The original defaults
 //#define    BASEWIDTH    320
 //#define    BASEHEIGHT   200
 // Much better for high resolution displays
-#define    BASEWIDTH    (320*2)
-#define    BASEHEIGHT   (200*2)
+#define    BASEWIDTH    800
+#define    BASEHEIGHT   600
 
 int    VGA_width, VGA_height, VGA_rowbytes, VGA_bufferrowbytes = 0;
 byte    *VGA_pagebase;
 
-static SDL_Surface *screen = NULL;
+// Background 8-bit framebuffer
+Uint8 *pixels;
+
+static SDL_Window *window = NULL;
+static SDL_Renderer *renderer = NULL;
+static SDL_Texture *texture = NULL;
 
 static qboolean mouse_avail;
 static float   mouse_x, mouse_y;
@@ -26,11 +37,31 @@ static int mouse_oldbuttonstate = 0;
 // No support for option menus
 void (*vid_menudrawfn)(void) = NULL;
 void (*vid_menukeyfn)(int key) = NULL;
+SDL_Color colors[256];
+SDL_PixelFormat *format;
+
+void render_rgb(uint32_t* rgb_values, int x, int y, int width, int height)
+{
+    int xp, yp, offset, loc;
+    int x2 = x + width;
+    int y2 = y + height;
+
+    for (yp = y; yp < y2; yp++)
+    {
+        offset = yp * VGA_width;
+
+        for (xp = x; xp < x2; xp++)
+        {
+            loc = offset + xp;
+            SDL_Color col = colors[pixels[loc]];
+            rgb_values[loc] = SDL_MapRGB(format, col.r, col.g, col.b);
+        }
+    }
+}
 
 void    VID_SetPalette (unsigned char *palette)
 {
     int i;
-    SDL_Color colors[256];
 
     for ( i=0; i<256; ++i )
     {
@@ -38,7 +69,6 @@ void    VID_SetPalette (unsigned char *palette)
         colors[i].g = *palette++;
         colors[i].b = *palette++;
     }
-    SDL_SetColors(screen, colors, 0, 256);
 }
 
 void    VID_ShiftPalette (unsigned char *palette)
@@ -56,7 +86,7 @@ void    VID_Init (unsigned char *palette)
     Uint32 flags;
 
     // Load the SDL library
-    if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO|SDL_INIT_CDROM) < 0)
+    if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO) < 0)
         Sys_Error("VID: Couldn't load SDL: %s", SDL_GetError());
 
     // Set up display mode (width and height)
@@ -75,24 +105,50 @@ void    VID_Init (unsigned char *palette)
     }
 
     // Set video width, height and flags
-    flags = (SDL_SWSURFACE|SDL_HWPALETTE);
+    flags = 0;
     if ( COM_CheckParm ("-fullscreen") )
-        flags |= SDL_FULLSCREEN;
+        flags |= SDL_WINDOW_FULLSCREEN;
 
-    // Initialize display 
-    if (!(screen = SDL_SetVideoMode(vid.width, vid.height, 8, flags)))
-        Sys_Error("VID: Couldn't set video mode: %s\n", SDL_GetError());
+    window = SDL_CreateWindow(
+        "Quake", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, BASEWIDTH, BASEHEIGHT, flags
+    );
+
+    if (window == NULL)
+        Sys_Error("VID: Couldn't create window: %s\n", SDL_GetError());
+
+    renderer = SDL_CreateRenderer(window, -1, 0);
+
+    if (renderer == NULL)
+        Sys_Error("VID: Couldn't create renderer: %s\n", SDL_GetError());
+
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");  // There shouldn't be any non-integer scaling
+    SDL_RenderSetLogicalSize(renderer, BASEWIDTH, BASEHEIGHT);
+
+    texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_STREAMING, BASEWIDTH, BASEHEIGHT);
+
+    if (texture == NULL)
+        Sys_Error("VID: Couldn't create render texture: %s\n", SDL_GetError());
+
     VID_SetPalette(palette);
-    SDL_WM_SetCaption("sdlquake","sdlquake");
+    format = SDL_AllocFormat(SDL_PIXELFORMAT_RGB888);
+    SDL_SetWindowTitle(window, "Quake");
     // now know everything we need to know about the buffer
     VGA_width = vid.conwidth = vid.width;
     VGA_height = vid.conheight = vid.height;
+
+    // Allocate memory for 8-bit background framebuffer
+    pixels = malloc(VGA_width * VGA_height);
+
+    if (pixels == NULL)
+        Sys_Error("Not enough memory for 8-bit buffer\n");
+
     vid.aspect = ((float)vid.height / (float)vid.width) * (320.0 / 240.0);
     vid.numpages = 1;
     vid.colormap = host_colormap;
     vid.fullbright = 256 - LittleLong (*((int *)vid.colormap + 2048));
-    VGA_pagebase = vid.buffer = screen->pixels;
-    VGA_rowbytes = vid.rowbytes = screen->pitch;
+    VGA_pagebase = vid.buffer = pixels;
+    VGA_rowbytes = vid.rowbytes = VGA_width;
     vid.conbuffer = vid.buffer;
     vid.conrowbytes = vid.rowbytes;
     vid.direct = 0;
@@ -112,39 +168,57 @@ void    VID_Init (unsigned char *palette)
 
     // initialize the mouse
     SDL_ShowCursor(0);
+    SDL_SetRelativeMouseMode(SDL_TRUE);
 }
 
 void    VID_Shutdown (void)
 {
+    if (pixels != NULL) {
+        free(pixels);
+        pixels = NULL;
+    }
+
+    if (texture != NULL) {
+        SDL_DestroyTexture(texture);
+        texture = NULL;
+    }
+
+    if (renderer != NULL) {
+        SDL_DestroyRenderer(renderer);
+        renderer = NULL;
+    }
+
+    if (window != NULL) {
+        SDL_DestroyWindow(window);
+        window = NULL;
+    }
+
     SDL_Quit();
 }
 
 void    VID_Update (vrect_t *rects)
 {
-    SDL_Rect *sdlrects;
-    int n, i;
     vrect_t *rect;
+    void* rgb_pixels;
+    int rgb_pitch;
 
-    // Two-pass system, since Quake doesn't do it the SDL way...
+    if (SDL_LockTexture(texture, NULL, &rgb_pixels, &rgb_pitch) < 0)
+        Sys_Error("VID: Couldn't lock texture: %s\n", SDL_GetError());
 
-    // First, count the number of rectangles
-    n = 0;
     for (rect = rects; rect; rect = rect->pnext)
-        ++n;
+        render_rgb((uint32_t*)rgb_pixels, rect->x, rect->y, rect->width, rect->height);
 
-    // Second, copy them to SDL rectangles and update
-    if (!(sdlrects = (SDL_Rect *)alloca(n*sizeof(*sdlrects))))
-        Sys_Error("Out of memory");
-    i = 0;
-    for (rect = rects; rect; rect = rect->pnext)
-    {
-        sdlrects[i].x = rect->x;
-        sdlrects[i].y = rect->y;
-        sdlrects[i].w = rect->width;
-        sdlrects[i].h = rect->height;
-        ++i;
-    }
-    SDL_UpdateRects(screen, n, sdlrects);
+    SDL_UnlockTexture(texture);
+
+    // Running SDL_RenderCopy with the rects here appears to result in the status area being erased
+    if (SDL_RenderCopy(renderer, texture, NULL, NULL) < 0)
+        Sys_Error("VID: Couldn't render texture: %s\n", SDL_GetError());
+
+    SDL_RenderPresent(renderer);
+
+#ifdef __EMSCRIPTEN__
+    emscripten_sleep(0);
+#endif
 }
 
 /*
@@ -157,13 +231,13 @@ void D_BeginDirectRect (int x, int y, byte *pbitmap, int width, int height)
     Uint8 *offset;
 
 
-    if (!screen) return;
-    if ( x < 0 ) x = screen->w+x-1;
-    offset = (Uint8 *)screen->pixels + y*screen->pitch + x;
+    if (pixels == NULL) return;
+    if (x < 0) x = VGA_width + x - 1;
+    offset = pixels + y * VGA_width + x;
     while ( height-- )
     {
         memcpy(offset, pbitmap, width);
-        offset += screen->pitch;
+        offset += VGA_width;
         pbitmap += width;
     }
 }
@@ -176,9 +250,8 @@ D_EndDirectRect
 */
 void D_EndDirectRect (int x, int y, int width, int height)
 {
-    if (!screen) return;
-    if (x < 0) x = screen->w+x-1;
-    SDL_UpdateRect(screen, x, y, width, height);
+    // Rendering the 'loading' icon here results in slowdown when reading
+    // multiple files in sequence, so don't force an update just yet.
 }
 
 
@@ -219,7 +292,7 @@ void Sys_SendKeyEvents(void)
                    case SDLK_F10: sym = K_F10; break;
                    case SDLK_F11: sym = K_F11; break;
                    case SDLK_F12: sym = K_F12; break;
-                   case SDLK_BREAK:
+                   //case SDLK_BREAK:
                    case SDLK_PAUSE: sym = K_PAUSE; break;
                    case SDLK_UP: sym = K_UPARROW; break;
                    case SDLK_DOWN: sym = K_DOWNARROW; break;
@@ -236,40 +309,40 @@ void Sys_SendKeyEvents(void)
                    case SDLK_LCTRL: sym = K_CTRL; break;
                    case SDLK_RALT:
                    case SDLK_LALT: sym = K_ALT; break;
-                   case SDLK_KP0: 
+                   case SDLK_KP_0:
                        if(modstate & KMOD_NUM) sym = K_INS; 
                        else sym = SDLK_0;
                        break;
-                   case SDLK_KP1:
+                   case SDLK_KP_1:
                        if(modstate & KMOD_NUM) sym = K_END;
                        else sym = SDLK_1;
                        break;
-                   case SDLK_KP2:
+                   case SDLK_KP_2:
                        if(modstate & KMOD_NUM) sym = K_DOWNARROW;
                        else sym = SDLK_2;
                        break;
-                   case SDLK_KP3:
+                   case SDLK_KP_3:
                        if(modstate & KMOD_NUM) sym = K_PGDN;
                        else sym = SDLK_3;
                        break;
-                   case SDLK_KP4:
+                   case SDLK_KP_4:
                        if(modstate & KMOD_NUM) sym = K_LEFTARROW;
                        else sym = SDLK_4;
                        break;
-                   case SDLK_KP5: sym = SDLK_5; break;
-                   case SDLK_KP6:
+                   case SDLK_KP_5: sym = SDLK_5; break;
+                   case SDLK_KP_6:
                        if(modstate & KMOD_NUM) sym = K_RIGHTARROW;
                        else sym = SDLK_6;
                        break;
-                   case SDLK_KP7:
+                   case SDLK_KP_7:
                        if(modstate & KMOD_NUM) sym = K_HOME;
                        else sym = SDLK_7;
                        break;
-                   case SDLK_KP8:
+                   case SDLK_KP_8:
                        if(modstate & KMOD_NUM) sym = K_UPARROW;
                        else sym = SDLK_8;
                        break;
-                   case SDLK_KP9:
+                   case SDLK_KP_9:
                        if(modstate & KMOD_NUM) sym = K_PGUP;
                        else sym = SDLK_9;
                        break;
@@ -299,7 +372,7 @@ void Sys_SendKeyEvents(void)
                          (event.motion.x > ((vid.width/2)+(vid.width/4))) ||
                          (event.motion.y < ((vid.height/2)-(vid.height/4))) ||
                          (event.motion.y > ((vid.height/2)+(vid.height/4))) ) {
-                        SDL_WarpMouse(vid.width/2, vid.height/2);
+                        SDL_WarpMouseInWindow(window, vid.width/2, vid.height/2);
                     }
                 }
                 break;

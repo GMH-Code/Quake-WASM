@@ -557,6 +557,9 @@ void Draw_ConsoleBackground (int lines)
 #elif defined(__linux__)
 	sprintf (ver, "(Linux Quake %2.2f) %4.2f", (float)LINUX_VERSION, (float)VERSION);
 	dest = conback->data + 320*186 + 320 - 11 - 8*strlen(ver);
+#elif defined(__EMSCRIPTEN__)
+	sprintf (ver, "(WASM Quake) %4.2f", (float)VERSION);
+	dest = conback->data + 320*186 + 320 - 11 - 8*strlen(ver);
 #else
 	dest = conback->data + 320 - 43 + 320*186;
 	sprintf (ver, "%4.2f", VERSION);

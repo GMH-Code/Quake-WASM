@@ -21,6 +21,10 @@
 
 #include "quakedef.h"
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 qboolean			isDedicated;
 
 int noconinput = 0;
@@ -47,7 +51,7 @@ void Sys_Printf (char *fmt, ...)
 	va_start (argptr,fmt);
 	vsprintf (text,fmt,argptr);
 	va_end (argptr);
-	fprintf(stderr, "%s", text);
+	fprintf(stdout, "%s", text);
 	
 	//Con_Print (text);
 }
@@ -99,7 +103,7 @@ void Sys_Error (char *error, ...)
     va_start (argptr,error);
     vsprintf (string,error,argptr);
     va_end (argptr);
-	fprintf(stderr, "Error: %s\n", string);
+	fprintf(stdout, "Error: %s\n", string);
 
 	Host_Shutdown ();
 	exit (1);
@@ -114,7 +118,7 @@ void Sys_Warn (char *warning, ...)
     va_start (argptr,warning);
     vsprintf (string,warning,argptr);
     va_end (argptr);
-	fprintf(stderr, "Warning: %s", string);
+	fprintf(stdout, "Warning: %s", string);
 } 
 
 /*
@@ -352,7 +356,11 @@ void Sys_LineRefresh(void)
 
 void Sys_Sleep(void)
 {
+#ifdef __EMSCRIPTEN__
+	emscripten_sleep(1);
+#else
 	SDL_Delay(1);
+#endif
 }
 
 void floating_point_exception_handler(int whatever)
@@ -379,7 +387,7 @@ int main (int c, char **v)
 //	signal(SIGFPE, floating_point_exception_handler);
 	signal(SIGFPE, SIG_IGN);
 
-	parms.memsize = 8*1024*1024;
+	parms.memsize = 16*1024*1024;
 	parms.membase = malloc (parms.memsize);
 	parms.basedir = basedir;
 	parms.cachedir = cachedir;
@@ -391,6 +399,12 @@ int main (int c, char **v)
 	Sys_Init();
 
     Host_Init(&parms);
+
+    Con_Printf("\nQuake version 1.09 by id Software\n\n");
+    Con_Printf("Based on the SDL patch from\n");
+    Con_Printf("libsdl.org\n\n");
+    Con_Printf("SDL2 & WASM conversion by\n");
+    Con_Printf("Gregory Maynard-Hoare\n\n");
 
 	Cvar_RegisterVariable (&sys_nostdout);
 
@@ -405,7 +419,11 @@ int main (int c, char **v)
         {   // play vcrfiles at max speed
             if (time < sys_ticrate.value && (vcrFile == -1 || recording) )
             {
-                SDL_Delay (1);
+#ifdef __EMSCRIPTEN__
+                emscripten_sleep(1);
+#else
+                SDL_Delay(1);
+#endif
                 continue;       // not time to run a server only tic yet
             }
             time = sys_ticrate.value;
@@ -441,7 +459,7 @@ void Sys_MakeCodeWriteable (unsigned long startaddr, unsigned long length)
 	unsigned long addr;
 	int psize = getpagesize();
 
-	fprintf(stderr, "writable code %lx-%lx\n", startaddr, startaddr+length);
+	fprintf(stdout, "writable code %lx-%lx\n", startaddr, startaddr+length);
 
 	addr = startaddr & ~(psize-1);
 
