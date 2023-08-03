@@ -376,6 +376,7 @@ void Sys_SendKeyEvents(void)
                    case SDLK_KP_PLUS: sym = SDLK_PLUS; break;
                    case SDLK_KP_ENTER: sym = SDLK_RETURN; break;
                    case SDLK_KP_EQUALS: sym = SDLK_EQUALS; break;
+                   case SDLK_APPLICATION: sym = 0x60; break;  // 0x60 (tilde) or 0x7E (SDLK_BACKQUOTE) open the Console
                 }
                 // If we're not directly handled and still above 255
                 // just force it to 0
