@@ -147,7 +147,7 @@ void    VID_Init (unsigned char *palette)
     pixels = malloc(VGA_width * VGA_height);
 
     if (pixels == NULL)
-        Sys_Error("Not enough memory for 8-bit buffer\n");
+        Sys_Error("VID: Not enough memory for 8-bit buffer\n");
 
     vid.aspect = ((float)vid.height / (float)vid.width) * (320.0 / 240.0);
     vid.numpages = 1;
@@ -164,8 +164,9 @@ void    VID_Init (unsigned char *palette)
     cachesize = D_SurfaceCacheForRes (vid.width, vid.height);
     chunk += cachesize;
     d_pzbuffer = Hunk_HighAllocName(chunk, "video");
+
     if (d_pzbuffer == NULL)
-        Sys_Error ("Not enough memory for video mode\n");
+        Sys_Error("VID: Not enough memory for video mode\n");
 
     // initialize the cache memory 
         cache = (byte *) d_pzbuffer
@@ -182,6 +183,11 @@ void    VID_Shutdown (void)
     if (pixels != NULL) {
         free(pixels);
         pixels = NULL;
+    }
+
+    if (format != NULL) {
+        SDL_FreeFormat(format);
+        format = NULL;
     }
 
     if (texture != NULL) {
@@ -231,10 +237,6 @@ void    VID_Update (vrect_t *rects)
         Sys_Error("VID: Couldn't render texture: %s\n", SDL_GetError());
 
     SDL_RenderPresent(renderer);
-
-#ifdef __EMSCRIPTEN__
-    emscripten_sleep(0);
-#endif
 }
 
 /*
