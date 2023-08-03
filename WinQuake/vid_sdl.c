@@ -25,6 +25,7 @@ byte    *VGA_pagebase;
 
 // Background 8-bit framebuffer
 Uint8 *pixels;
+byte force_entire_redraw = 0;
 
 static SDL_Window *window = NULL;
 static SDL_Renderer *renderer = NULL;
@@ -69,6 +70,11 @@ void    VID_SetPalette (unsigned char *palette)
         colors[i].g = *palette++;
         colors[i].b = *palette++;
     }
+
+    // Palette changes can affect pixels outside the update regions (such as
+    // the status area), so we have to force an update to the entire texture.
+    // We can, however, wait for the texture to actually be rendered.
+    force_entire_redraw = 1;
 }
 
 void    VID_ShiftPalette (unsigned char *palette)
@@ -205,8 +211,18 @@ void    VID_Update (vrect_t *rects)
     if (SDL_LockTexture(texture, NULL, &rgb_pixels, &rgb_pitch) < 0)
         Sys_Error("VID: Couldn't lock texture: %s\n", SDL_GetError());
 
-    for (rect = rects; rect; rect = rect->pnext)
-        render_rgb((uint32_t*)rgb_pixels, rect->x, rect->y, rect->width, rect->height);
+    if (force_entire_redraw)
+    {
+        // Render everything
+        render_rgb((uint32_t*)rgb_pixels, 0, 0, VGA_width, VGA_height);
+        force_entire_redraw = 0;
+    }
+    else
+    {
+        // Render delta regions
+        for (rect = rects; rect; rect = rect->pnext)
+            render_rgb((uint32_t*)rgb_pixels, rect->x, rect->y, rect->width, rect->height);
+    }
 
     SDL_UnlockTexture(texture);
 
@@ -251,7 +267,9 @@ D_EndDirectRect
 void D_EndDirectRect (int x, int y, int width, int height)
 {
     // Rendering the 'loading' icon here results in slowdown when reading
-    // multiple files in sequence, so don't force an update just yet.
+    // multiple files in sequence, so wait for a screen update before
+    // redrawing.
+    force_entire_redraw = 1;
 }
 
 
