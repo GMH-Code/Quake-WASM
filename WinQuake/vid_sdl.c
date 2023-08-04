@@ -471,13 +471,3 @@ void IN_Move (usercmd_t *cmd)
     }
     mouse_x = mouse_y = 0.0;
 }
-
-/*
-================
-Sys_ConsoleInput
-================
-*/
-char *Sys_ConsoleInput (void)
-{
-    return 0;
-}
