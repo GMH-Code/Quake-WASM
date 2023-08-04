@@ -366,9 +366,7 @@ void Sys_LineRefresh(void)
 
 void Sys_Sleep(void)
 {
-#ifdef __EMSCRIPTEN__
-	emscripten_sleep(1);
-#else
+#ifndef __EMSCRIPTEN__
 	SDL_Delay(1);
 #endif
 }
@@ -421,6 +419,10 @@ int main (int c, char **v)
     oldtime = Sys_FloatTime () - 0.1;
     while (1)
     {
+#ifdef __EMSCRIPTEN__
+        emscripten_sleep(1);
+#endif
+
 // find time spent rendering last frame
         newtime = Sys_FloatTime ();
         time = newtime - oldtime;
@@ -429,10 +431,8 @@ int main (int c, char **v)
         {   // play vcrfiles at max speed
             if (time < sys_ticrate.value && (vcrFile == -1 || recording) )
             {
-#ifdef __EMSCRIPTEN__
-                emscripten_sleep(1);
-#else
-                SDL_Delay(1);
+#ifndef __EMSCRIPTEN__
+                Sys_Sleep();
 #endif
                 continue;       // not time to run a server only tic yet
             }
