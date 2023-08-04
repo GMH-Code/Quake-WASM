@@ -398,7 +398,7 @@ int main (int c, char **v)
 	parms.memsize = 16*1024*1024;
 	parms.membase = malloc (parms.memsize);
 	parms.basedir = basedir;
-	parms.cachedir = cachedir;
+	parms.cachedir = NULL;  // Using 'cachedir' stops standalone .cfg files from execing
 
 	COM_InitArgv(c, v);
 	parms.argc = com_argc;
