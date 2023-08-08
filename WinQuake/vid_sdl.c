@@ -87,8 +87,6 @@ void    VID_Init (unsigned char *palette)
     int pnum, chunk;
     byte *cache;
     int cachesize;
-    Uint8 video_bpp;
-    Uint16 video_w, video_h;
     Uint32 flags;
 
     // Load the SDL library
@@ -169,8 +167,8 @@ void    VID_Init (unsigned char *palette)
         Sys_Error("VID: Not enough memory for video mode\n");
 
     // initialize the cache memory 
-        cache = (byte *) d_pzbuffer
-                + vid.width * vid.height * sizeof (*d_pzbuffer);
+    cache = (byte *) d_pzbuffer
+            + vid.width * vid.height * sizeof (*d_pzbuffer);
     D_InitCaches (cache, cachesize);
 
     // initialize the mouse
@@ -389,10 +387,10 @@ void Sys_SendKeyEvents(void)
                      (event.motion.y != (vid.height/2)) ) {
                     mouse_x = event.motion.xrel*10;
                     mouse_y = event.motion.yrel*10;
-                    if ( (event.motion.x < ((vid.width/2)-(vid.width/4))) ||
-                         (event.motion.x > ((vid.width/2)+(vid.width/4))) ||
-                         (event.motion.y < ((vid.height/2)-(vid.height/4))) ||
-                         (event.motion.y > ((vid.height/2)+(vid.height/4))) ) {
+                    if ( (event.motion.x < (Sint32)((vid.width/2)-(vid.width/4))) ||
+                         (event.motion.x > (Sint32)((vid.width/2)+(vid.width/4))) ||
+                         (event.motion.y < (Sint32)((vid.height/2)-(vid.height/4))) ||
+                         (event.motion.y > (Sint32)((vid.height/2)+(vid.height/4))) ) {
                         SDL_WarpMouseInWindow(window, vid.width/2, vid.height/2);
                     }
                 }
