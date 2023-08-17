@@ -620,6 +620,9 @@ void SCR_ScreenShot_f (void)
 	char		pcxname[80]; 
 	char		checkname[MAX_OSPATH];
 
+#ifdef __EMSCRIPTEN__
+	strcpy(pcxname,"quake.pcx");
+#else
 // 
 // find a file name to save it to 
 // 
@@ -638,6 +641,7 @@ void SCR_ScreenShot_f (void)
 		Con_Printf ("SCR_ScreenShot_f: Couldn't create a PCX file\n"); 
 		return;
  	}
+#endif
 
 // 
 // save the pcx file 
