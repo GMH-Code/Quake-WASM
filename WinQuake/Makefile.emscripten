@@ -5,7 +5,8 @@
 CC := emcc
 CFLAGS := -O3 -ffast-math -funroll-loops -fomit-frame-pointer -Wall -Wextra -Wno-implicit-function-declaration \
 	-Wno-unused-parameter -Wno-missing-field-initializers -sUSE_SDL=2 -DSDL
-LDFLAGS := -O3 -sUSE_SDL=2 -sASYNCIFY -sINITIAL_MEMORY=64MB -sTOTAL_STACK=2MB -sALLOW_MEMORY_GROWTH --preload-file=id1
+LDFLAGS := -O3 -sUSE_SDL=2 -sASYNCIFY -sINITIAL_MEMORY=64MB -sTOTAL_STACK=2MB -sALLOW_MEMORY_GROWTH --preload-file=id1 \
+	--shell-file shell.html
 TARGET := index.html
 
 # C source files
