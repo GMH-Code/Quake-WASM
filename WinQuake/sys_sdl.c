@@ -381,6 +381,57 @@ void moncontrol(int x)
 {
 }
 
+#ifdef __EMSCRIPTEN__
+EM_JS(int, wasm_check_restore, (), {
+	return Module.restore_complete;
+});
+
+void wasm_init_fs(void)
+{
+	// Sync from IDBFS in the background
+	EM_ASM(
+		Module.restore_complete = 0;
+#ifdef WASM_SAVE_PAKS
+		FS.mkdir("/id1");
+		FS.mount(IDBFS, {}, "/id1");
+#endif
+		FS.mkdir("/quake-wasm");
+		FS.mount(IDBFS, {}, "/quake-wasm");
+		console.info("Loading data...");
+		FS.syncfs(true, function (err) {
+			if (err)
+				console.warn("Failed to load data: " + err);
+			else
+				console.info("Data loaded.");
+
+			Module.restore_complete = 1;
+		});
+	);
+
+	printf("Waiting for data to be restored...\n");
+
+	// Sleep until IDBFS is ready
+	while (!wasm_check_restore())
+		emscripten_sleep(100);
+
+	printf("Data restoration complete.\n");
+}
+
+void wasm_sync_fs(void)
+{
+	// Sync to IDBFS in the background
+	EM_ASM(
+		console.info("Saving data...");
+		FS.syncfs(function (err) {
+			if (err)
+				console.warn("Failed to save data: " + err);
+			else
+				console.info("Data saved.");
+		});
+	);
+}
+#endif
+
 int main (int c, char **v)
 {
 
@@ -389,6 +440,10 @@ int main (int c, char **v)
 	extern int vcrFile;
 	extern int recording;
 	static int frame;
+
+#ifdef __EMSCRIPTEN__
+	wasm_init_fs();
+#endif
 
 	moncontrol(0);
 

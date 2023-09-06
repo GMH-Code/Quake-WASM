@@ -1796,6 +1796,18 @@ void COM_InitFilesystem (void)
 		COM_AddGameDirectory (va("%s/%s", basedir, com_argv[i+1]));
 	}
 
+#if defined(__EMSCRIPTEN__) && !defined(WASM_SAVE_PAKS)
+	//
+	// If running in WebAssembly, save data to a different, initially empty
+	// location so we can avoid:
+	//
+	// - Losing the PAK file(s) upon restoring the filesystem from the browser
+	// - Keeping a copy of potentially outdated PAK file(s) in browser storage
+	// - Post-save slowdown due to the PAK file(s) being rewritten on each sync
+	//
+	COM_AddGameDirectory (va("%s/quake-wasm", basedir) );
+#endif
+
 //
 // -path <dir or packfile> [<dir or packfile>] ...
 // Fully specifies the exact serach path, overriding the generated one

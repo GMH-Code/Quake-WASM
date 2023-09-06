@@ -183,6 +183,11 @@ void CL_Stop_f (void)
 	fclose (cls.demofile);
 	cls.demofile = NULL;
 	cls.demorecording = false;
+
+#ifdef __EMSCRIPTEN__
+	wasm_sync_fs();
+#endif
+
 	Con_Printf ("Completed demo\n");
 }
 

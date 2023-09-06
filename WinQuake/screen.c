@@ -655,6 +655,10 @@ void SCR_ScreenShot_f (void)
 	D_DisableBackBufferAccess ();	// for adapters that can't stay mapped in
 									//  for linear writes all the time
 
+#ifdef __EMSCRIPTEN__
+	wasm_sync_fs();
+#endif
+
 	Con_Printf ("Wrote %s\n", pcxname);
 } 
 

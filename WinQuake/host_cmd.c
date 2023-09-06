@@ -549,6 +549,11 @@ void Host_Savegame_f (void)
 		fflush (f);
 	}
 	fclose (f);
+
+#ifdef __EMSCRIPTEN__
+	wasm_sync_fs();
+#endif
+
 	Con_Printf ("done.\n");
 }
 
@@ -755,6 +760,11 @@ void SaveGamestate()
 		fflush (f);
 	}
 	fclose (f);
+
+#ifdef __EMSCRIPTEN__
+	wasm_sync_fs();
+#endif
+
 	Con_Printf ("done.\n");
 }
 

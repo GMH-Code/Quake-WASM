@@ -262,6 +262,10 @@ void Host_WriteConfiguration (void)
 		Cvar_WriteVariables (f);
 
 		fclose (f);
+
+#ifdef __EMSCRIPTEN__
+		wasm_sync_fs();
+#endif
 	}
 }
 

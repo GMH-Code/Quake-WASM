@@ -334,3 +334,16 @@ extern	cvar_t	chase_active;
 void Chase_Init (void);
 void Chase_Reset (void);
 void Chase_Update (void);
+
+#ifdef __EMSCRIPTEN__
+	// This is not ideal, but for now it is needed to ensure Emscripten's C
+	// compiler sets correct function signatures in object files.
+	//
+	// Without this header information, there are function signature mismatch
+	// issues at link time, and can be unreachable functions at run time.
+	//
+	// This could be moved elsewhere at a later point.
+
+	qboolean SV_RecursiveHullCheck (hull_t *hull, int num, float p1f, float p2f, vec3_t p1, vec3_t p2, trace_t *trace);
+	void wasm_sync_fs(void);
+#endif
