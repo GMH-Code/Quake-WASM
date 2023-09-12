@@ -55,6 +55,7 @@ char	com_cmdline[CMDLINE_LENGTH];
 
 qboolean		standard_quake = true, rogue, hipnotic;
 
+#ifdef CHECK_POP_CONTENTS
 // this graphic needs to be in the pak file to use registered features
 unsigned short pop[] =
 {
@@ -75,6 +76,7 @@ unsigned short pop[] =
 ,0x0000,0x0000,0x0000,0x0000,0x6500,0x0000,0x0000,0x0000
 ,0x0000,0x0000,0x0000,0x0000,0x6400,0x0000,0x0000,0x0000
 };
+#endif
 
 /*
 
@@ -1015,8 +1017,10 @@ being registered.
 void COM_CheckRegistered (void)
 {
 	int             h;
+#ifdef CHECK_POP_CONTENTS
 	unsigned short  check[128];
 	int                     i;
+#endif
 
 	COM_OpenFile("gfx/pop.lmp", &h);
 	static_registered = 0;
@@ -1032,12 +1036,16 @@ void COM_CheckRegistered (void)
 		return;
 	}
 
+#ifdef CHECK_POP_CONTENTS
 	Sys_FileRead (h, check, sizeof(check));
+#endif
 	COM_CloseFile (h);
 	
+#ifdef CHECK_POP_CONTENTS
 	for (i=0 ; i<128 ; i++)
 		if (pop[i] != (unsigned short)BigShort (check[i]))
 			Sys_Error ("Corrupted data file.");
+#endif
 	
 	Cvar_Set ("cmdline", com_cmdline);
 	Cvar_Set ("registered", "1");
