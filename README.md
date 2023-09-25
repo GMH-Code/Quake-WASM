@@ -97,6 +97,24 @@ QuakeC is often referred to as compiled, but, to clarify, it actually compiles t
 
 Custom maps, models, textures, sounds, textures and animated sprites should also work, especially if they worked on the original DOS or Windows versions.
 
+Command-Line Arguments
+----------------------
+
+Like the desktop version of Quake, you can pass arguments to this version at runtime.  By default, the query portion of the URL is used, but the JavaScript code can be modified to use anything else, such as an input text box.
+
+### Example
+
+Let's say you were using the default template, serving the page locally, and you wanted to:
+
+1. Start the engine with the canvas resolution set to 1152x864, and
+2. Run the console command that opens the 'Load Game' menu.
+
+To do this you would normally use something like `-winsize 1152 864 +menu_load`.
+
+In *Quake-WASM*, you can append a single `?` to the end of the URL and place `&` between each parameter and value, where you would usually put a space.  This would look something like:
+
+    https://127.0.0.1/?-winsize&1152&864&+menu_load
+
 Registered Version Detection
 ----------------------------
 

@@ -114,7 +114,7 @@ void    VID_Init (unsigned char *palette)
         flags |= SDL_WINDOW_FULLSCREEN;
 
     window = SDL_CreateWindow(
-        "Quake", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, BASEWIDTH, BASEHEIGHT, flags
+        "Quake", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, vid.width, vid.height, flags
     );
 
     if (window == NULL)
@@ -127,9 +127,9 @@ void    VID_Init (unsigned char *palette)
 
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");  // There shouldn't be any non-integer scaling
-    SDL_RenderSetLogicalSize(renderer, BASEWIDTH, BASEHEIGHT);
+    SDL_RenderSetLogicalSize(renderer, vid.width, vid.height);
 
-    texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_STREAMING, BASEWIDTH, BASEHEIGHT);
+    texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_STREAMING, vid.width, vid.height);
 
     if (texture == NULL)
         Sys_Error("VID: Couldn't create render texture: %s\n", SDL_GetError());

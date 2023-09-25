@@ -469,7 +469,12 @@ int main (int c, char **v)
     Con_Printf("SDL2 & WASM conversion by\n");
     Con_Printf("Gregory Maynard-Hoare\n\n");
 
-	Cvar_RegisterVariable (&sys_nostdout);
+    for (int arg_num=0; arg_num<c; arg_num++)
+        Con_Printf("Startup arg %i: %s\n", arg_num, v[arg_num]);
+
+    Con_Printf("\n");
+
+    Cvar_RegisterVariable (&sys_nostdout);
 
     oldtime = Sys_FloatTime () - 0.1;
     while (1)
