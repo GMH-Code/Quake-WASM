@@ -1813,7 +1813,17 @@ void COM_InitFilesystem (void)
 	// - Keeping a copy of potentially outdated PAK file(s) in browser storage
 	// - Post-save slowdown due to the PAK file(s) being rewritten on each sync
 	//
-	COM_AddGameDirectory (va("%s/quake-wasm", basedir) );
+	char relative_dir[MAX_OSPATH];
+	char save_dir[MAX_OSPATH];
+
+	if (strlen(com_gamedir) > 1 && strcmp(&com_gamedir[0], ".") && strcmp(&com_gamedir[1], "/"))
+	{
+		strncpy(relative_dir, com_gamedir + 1, sizeof(relative_dir));
+		relative_dir[sizeof(relative_dir) - 1] = '\0';
+		snprintf(save_dir, sizeof(save_dir), "/quake-wasm%s", relative_dir);
+		Sys_mkdir(save_dir);
+		COM_AddGameDirectory(va(save_dir));
+	}
 #endif
 
 //

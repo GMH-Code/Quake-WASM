@@ -3,10 +3,12 @@ Quake-WASM
 
 This is a WebAssembly port of the famous 3D first-person shooter Quake.
 
+[Run the Quake engine in your browser here](https://gmh-code.github.io/quake/).
+
 Playing a Free Version
 ----------------------
 
-You can play a game based on the Quake engine [here](https://gmh-code.github.io/quake-free/).
+You can play a free version (with bots) using the above link.
 
 This runs entirely in your browser and doesn't require anything from the original game.
 
@@ -14,8 +16,6 @@ Playing the Shareware / Full Version
 ------------------------------------
 
 If you already have the shareware version of the Quake, or know where to get it, you need to extract the resource file `PAK0.PAK`.  If you have the full version, you can add `PAK1.PAK`.
-
-Providing you have the relevant file(s), you can start the game [here](https://gmh-code.github.io/quake/).
 
 It is also possible to run mods if you supply additional `PAK` files, e.g. `PAK2.PAK`, `PAK3.PAK`, etc.
 
@@ -93,9 +93,11 @@ Mods and QuakeC Support
 
 Mods written in QuakeC, which worked in the original version of Quake, should also run in WebAssembly.
 
-QuakeC is often referred to as compiled, but, to clarify, it actually compiles to bytecode rather than native machine mode, similar to *CPython*.  This bytecode is interpreted at runtime.  Since this interpreter works in WebAssembly, most Quake 1 mods should be playable within your browser.
-
 Custom maps, models, textures, sounds, textures and animated sprites should also work, especially if they worked on the original DOS or Windows versions.
+
+Saving is supported, even when hosting several mods on the same URL.  This works exactly the same way as the desktop version, except user data is kept in a separate location.
+
+QuakeC is often referred to as compiled, but, to clarify, it actually compiles to bytecode rather than native machine mode, similar to *CPython*.  This bytecode is interpreted at runtime.  Since this interpreter works in WebAssembly, most Quake 1 mods should be playable within your browser.
 
 Command-Line Arguments
 ----------------------
