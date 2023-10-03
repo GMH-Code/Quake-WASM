@@ -59,6 +59,11 @@ void Sys_Printf (char *fmt, ...)
 void Sys_Quit (void)
 {
 	Host_Shutdown();
+#ifdef __EMSCRIPTEN__
+	EM_ASM(
+		Module.showConsole();
+	);
+#endif
 	exit(0);
 }
 
@@ -475,6 +480,12 @@ int main (int c, char **v)
     Con_Printf("\n");
 
     Cvar_RegisterVariable (&sys_nostdout);
+
+#ifdef __EMSCRIPTEN__
+    EM_ASM(
+        Module.hideConsole();
+    );
+#endif
 
     oldtime = Sys_FloatTime () - 0.1;
     while (1)

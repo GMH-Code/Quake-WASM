@@ -34,6 +34,9 @@ static SDL_Texture *texture = NULL;
 static qboolean mouse_avail;
 static float   mouse_x, mouse_y;
 static int mouse_oldbuttonstate = 0;
+#ifdef __EMSCRIPTEN__
+static qboolean mouse_ready = false;
+#endif
 
 // No support for option menus
 void (*vid_menudrawfn)(void) = NULL;
@@ -386,8 +389,12 @@ void Sys_SendKeyEvents(void)
                 if ( (event.motion.x != (vid.width/2)) ||
                      (event.motion.y != (vid.height/2)) ) {
 #ifdef __EMSCRIPTEN__
-                    mouse_x = event.motion.xrel*2;
-                    mouse_y = event.motion.yrel*2;
+                    if (mouse_ready) {
+                        mouse_x = event.motion.xrel*2;
+                        mouse_y = event.motion.yrel*2;
+                    }
+                    else
+                        mouse_ready = true;  // Drop the first (usually large) movement
 #else
                     mouse_x = event.motion.xrel*10;
                     mouse_y = event.motion.yrel*10;
