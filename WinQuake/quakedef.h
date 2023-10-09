@@ -346,4 +346,33 @@ void Chase_Update (void);
 
 	qboolean SV_RecursiveHullCheck (hull_t *hull, int num, float p1f, float p2f, vec3_t p1, vec3_t p2, trace_t *trace);
 	void wasm_sync_fs(void);
+	void emscripten_sleep(unsigned int ms);
+
+#ifdef GLQUAKE
+	void EmitWaterPolys (msurface_t *fa);
+	void R_DrawBrushModel (entity_t *e);
+	void R_RenderBrushPoly (msurface_t *fa);
+	void R_InitParticles (void);
+	void R_StoreEfrags (efrag_t **ppefrag);
+	void R_DrawWorld (void);
+	void R_RenderDlights (void);
+	void R_DrawWaterSurfaces (void);
+	void GL_SubdivideSurface (msurface_t *fa);
+	void R_MarkLights (dlight_t *light, int bit, mnode_t *node);
+	void RotatePointAroundVector( vec3_t dst, const vec3_t dir, const vec3_t point, float degrees );
+	void R_RotateForEntity (entity_t *e);
+	void GL_BuildLightmaps (void);
+	void EmitSkyPolys (msurface_t *fa);
+	void R_DrawParticles (void);
+	void EmitBothSkyLayers (msurface_t *fa);
+	void R_AnimateLight (void);
+	void R_DrawSkyChain (msurface_t *s);
+	void GL_MakeAliasModelDisplayLists (model_t *m, aliashdr_t *hdr);
+	void V_CalcBlend (void);
+	void R_ClearParticles (void);
+	void GL_Upload8_EXT (byte *data, int width, int height,  qboolean mipmap, qboolean alpha);
+	void GL_Set2D (void);
+	void initialize_gl4es();
+#endif
+
 #endif

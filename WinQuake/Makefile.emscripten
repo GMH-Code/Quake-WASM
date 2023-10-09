@@ -9,6 +9,10 @@ LDFLAGS := -O3 -sUSE_SDL=2 -sASYNCIFY -sINITIAL_MEMORY=64MB -sTOTAL_STACK=2MB -s
 	--shell-file shell.html -lidbfs.js
 TARGET := index.html
 
+ifeq ($(GLQUAKE), 1)
+	GL4ES := /home/user/gl4es
+endif
+
 # C source files
 SRCS := \
 chase.c \
@@ -22,51 +26,22 @@ common.c \
 console.c \
 crc.c \
 cvar.c \
-d_edge.c \
-d_fill.c \
-d_init.c \
-d_modech.c \
-d_part.c \
-d_polyse.c \
-d_scan.c \
-d_sky.c \
-d_sprite.c \
-d_surf.c \
-d_vars.c \
-d_zpoint.c \
-draw.c \
 host.c \
 host_cmd.c \
 keys.c \
 mathlib.c \
 menu.c \
-model.c \
 net_bsd.c \
 net_dgrm.c \
 net_loop.c \
 net_main.c \
 net_udp.c \
 net_vcr.c \
-nonintel.c \
 pr_cmds.c \
 pr_edict.c \
 pr_exec.c \
-r_aclip.c \
-r_alias.c \
-r_bsp.c \
-r_draw.c \
-r_edge.c \
-r_efrag.c \
-r_light.c \
-r_main.c \
-r_misc.c \
 r_part.c \
-r_sky.c \
-r_sprite.c \
-r_surf.c \
-r_vars.c \
 sbar.c \
-screen.c \
 snd_dma.c \
 snd_mem.c \
 snd_mix.c \
@@ -77,7 +52,58 @@ sv_user.c \
 view.c \
 wad.c \
 world.c \
-zone.c \
+zone.c
+
+ifeq ($(GLQUAKE), 1)
+	SRCS += \
+	gl_draw.c \
+	gl_mesh.c \
+	gl_model.c \
+	gl_refrag.c \
+	gl_rlight.c \
+	gl_rmain.c \
+	gl_rmisc.c \
+	gl_rsurf.c \
+	gl_screen.c \
+	gl_test.c \
+	gl_warp.c
+
+	CFLAGS += -Wno-unknown-pragmas -Wno-macro-redefined -Wno-pointer-sign -DGLQUAKE -I$(GL4ES)/include
+	LDFLAGS += $(GL4ES)/lib/libGL.a -sFULL_ES2=1
+else
+	SRCS += \
+	d_edge.c \
+	d_fill.c \
+	d_init.c \
+	d_modech.c \
+	d_part.c \
+	d_polyse.c \
+	d_scan.c \
+	d_sky.c \
+	d_sprite.c \
+	d_surf.c \
+	d_vars.c \
+	d_zpoint.c \
+	draw.c \
+	model.c \
+	nonintel.c \
+	r_aclip.c \
+	r_alias.c \
+	r_bsp.c \
+	r_draw.c \
+	r_edge.c \
+	r_efrag.c \
+	r_light.c \
+	r_main.c \
+	r_misc.c \
+	r_sky.c \
+	r_sprite.c \
+	r_surf.c \
+	r_vars.c \
+	screen.c
+endif
+
+SRCS += \
 cd_null.c \
 snd_sdl.c \
 sys_sdl.c \

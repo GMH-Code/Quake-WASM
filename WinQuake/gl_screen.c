@@ -103,9 +103,9 @@ int			scr_fullupdate;
 int			clearconsole;
 int			clearnotify;
 
-int			sb_lines;
+extern int	sb_lines;
 
-viddef_t	vid;				// global video state
+extern viddef_t	vid;				// global video state
 
 vrect_t		scr_vrect;
 
@@ -752,6 +752,9 @@ int SCR_ModalMessage (char *text)
 	{
 		key_count = -1;		// wait for a key down and up
 		Sys_SendKeyEvents ();
+#ifdef __EMSCRIPTEN__
+		emscripten_sleep(1);
+#endif
 	} while (key_lastpress != 'y' && key_lastpress != 'n' && key_lastpress != K_ESCAPE);
 
 	scr_fullupdate = 0;

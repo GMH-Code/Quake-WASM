@@ -5,6 +5,11 @@ This is a WebAssembly port of the famous 3D first-person shooter Quake.
 
 [Run the Quake engine in your browser here](https://gmh-code.github.io/quake/).
 
+Quake-WASM supports:
+
+- Quake -- software rendering.
+- GLQuake -- hardware-accelerated rendering, through WebGL.
+
 Playing a Free Version
 ----------------------
 
@@ -88,12 +93,16 @@ When testing, this version (still running in a browser) was consistently around 
 
 This version does *not* include the x86 assembler code.  Instead, the cross-platform C substitutes are swapped in, and optimised compiler settings are used.  *Quake-WASM* doesn't have the x86 advantage in WebAssembly, however, it *does* have the advantage of being able to run across different CPU architectures without recompilation, such as on ARM CPUs.
 
+### GLQuake vs Quake
+
+GLQuake performs 2 to 3.5 times as fast as Quake when running in WebGL.  This is dependent on hardware, scene complexity, and other events being processed.  The game can also handle higher resolutions with greater ease.  In my opinion, this version looks far better.
+
 Mods and QuakeC Support
 -----------------------
 
 Mods written in QuakeC, which worked in the original version of Quake, should also run in WebAssembly.
 
-Custom maps, models, textures, sounds, textures and animated sprites should also work, especially if they worked on the original DOS or Windows versions.
+Custom maps, models, textures, sounds, and animated sprites should also work, especially if they worked on the original DOS or Windows versions.
 
 Saving is supported, even when hosting several mods on the same URL.  This works exactly the same way as the desktop version, except user data is kept in a separate location.
 
@@ -127,13 +136,6 @@ Simply forcing the game to run registered by default is not a good idea because 
 - Breaks proper compatibility with the official shareware version, most notably when accessing levels in the *Introduction*.
 - Potentially breaks third-party add-ons that use assets from the full version, if only the shareware files are present.
 
-GLQuake and WebGL Hardware-Accelerated Graphics
------------------------------------------------
-
-It is possible to add OpenGL -> WebGL support to this version, allowing GLQuake to run GPU-accelerated in a web browser.  The game builds and runs, but no objects render and there are JavaScript console warnings regarding missing GL translation support.  This is why only the software-rendering version has been supplied, for now at least.
-
-Emscripten has limited emulation for the old-style OpenGL Fixed Function Pipeline (FFP).  Quake 1 does not use shaders, whereas WebGL and OpenGL ES does.  Building with *Regal* as a compatibility layer also hasn't worked yet.
-
 Networking Support
 ------------------
 
@@ -141,8 +143,8 @@ You can play in a browser window, but WebSockets support for multiplayer has not
 
 It should be possible to connect to a WebSockets proxy to enable online play, but the project will need rebuilding with the appropriate proxy configuration.
 
-Building from Source (on Linux)
--------------------------------
+Building Quake from Source (on Linux)
+-------------------------------------
 
 Before you start:
 
@@ -161,6 +163,17 @@ Next, download and extract [Emscripten](https://emscripten.org/), then run these
 This will output `index.html`, `index.js`, `index.wasm`, and `index.data`, which can be placed into an empty directory on a web server.
 
 For fastest download time, compress these files with *GZip* or *Brotli* and ensure they are served as-is.
+
+Building GLQuake from Source (on Linux)
+---------------------------------------
+
+This is the same as building Quake, except you should additionally:
+
+1. Download *GL4ES* and build it for Emscripten, as per its instructions.
+2. Edit `Makefile.emscripten` to point to *GL4ES*'s `include` and `lib` directories.
+3. Call `make -f Makefile.emscripten GLQUAKE=1` as a substitute for the final step.
+
+Quake and GLQuake can co-exist on the same web server and will share settings / saves if on the same domain.
 
 Notes
 -----

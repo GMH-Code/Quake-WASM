@@ -21,7 +21,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "quakedef.h"
 
-int			skytexturenum;
+extern int			skytexturenum;
 
 #ifndef GL_RGBA4
 #define	GL_RGBA4	0

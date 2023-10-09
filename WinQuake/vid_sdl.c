@@ -1,24 +1,49 @@
-// vid_sdl.h -- sdl video driver 
+/*
+SDL2 Video Driver
+=================
 
-// Updates and SDL2/WASM/32-bit renderer conversions by Gregory Maynard-Hoare
+Updates and SDL2/WASM/32-bit renderer conversions by Gregory Maynard-Hoare
+Contains repurposed code Copyright (C) 1996-1997 Id Software, Inc.
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+
+See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+*/
 
 #include <SDL2/SDL.h>
 #include "quakedef.h"
+#ifndef GLQUAKE
 #include "d_local.h"
+#endif
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #endif
 
-extern viddef_t    vid;                // global video state
 unsigned short  d_8to16table[256];
 
 // The original defaults
 //#define    BASEWIDTH    320
 //#define    BASEHEIGHT   200
 // Much better for high resolution displays
+#ifdef GLQUAKE
+#define    BASEWIDTH    1024
+#define    BASEHEIGHT   768
+#else
 #define    BASEWIDTH    800
 #define    BASEHEIGHT   600
+#endif
 
 int    VGA_width, VGA_height, VGA_rowbytes, VGA_bufferrowbytes = 0;
 byte    *VGA_pagebase;
@@ -28,8 +53,6 @@ Uint8 *pixels;
 byte force_entire_redraw = 0;
 
 static SDL_Window *window = NULL;
-static SDL_Renderer *renderer = NULL;
-static SDL_Texture *texture = NULL;
 
 static qboolean mouse_avail;
 static float   mouse_x, mouse_y;
@@ -44,6 +67,26 @@ void (*vid_menukeyfn)(int key) = NULL;
 SDL_Color colors[256];
 SDL_PixelFormat *format;
 
+#ifdef GLQUAKE
+viddef_t vid;  // Global video state
+static float vid_gamma = 0.6;
+unsigned char d_15to8table[65536];
+unsigned d_8to24table[256];
+int texture_extension_number = 1;
+qboolean gl_mtexable = false;
+qboolean isPermedia = false;
+float gldepthmin, gldepthmax;
+const char *gl_vendor, *gl_renderer, *gl_version, *gl_extensions;
+int texture_mode = GL_LINEAR;
+cvar_t gl_ztrick = {"gl_ztrick", "0"};
+static SDL_GLContext *gl_context = NULL;
+#else
+extern viddef_t vid;  // Global video state
+static SDL_Renderer *renderer = NULL;
+static SDL_Texture *texture = NULL;
+#endif
+
+#ifndef GLQUAKE
 void render_rgb(uint32_t* rgb_values, int x, int y, int width, int height)
 {
     int xp, yp, offset, loc;
@@ -62,9 +105,61 @@ void render_rgb(uint32_t* rgb_values, int x, int y, int width, int height)
         }
     }
 }
+#endif
 
 void    VID_SetPalette (unsigned char *palette)
 {
+#ifdef GLQUAKE
+    byte *pal;
+    unsigned r,g,b;
+    unsigned v;
+    int r1,g1,b1;
+    int k;
+    unsigned short i;
+    unsigned *table;
+    int dist, bestdist;
+
+//
+// 8 8 8 encoding
+//
+    pal = palette;
+    table = d_8to24table;
+    for (i=0 ; i<256 ; i++)
+    {
+        r = pal[0];
+        g = pal[1];
+        b = pal[2];
+        pal += 3;
+
+        v = (255<<24) + (r<<0) + (g<<8) + (b<<16);
+        *table++ = v;
+    }
+    d_8to24table[255] &= 0xffffff;  // 255 is transparent
+
+    for (i=0; i < (1<<15); i++) {
+        /* Maps
+        000000000000000
+        000000000011111 = Red  = 0x1F
+        000001111100000 = Blue = 0x03E0
+        111110000000000 = Grn  = 0x7C00
+        */
+        r = ((i & 0x1F) << 3)+4;
+        g = ((i & 0x03E0) >> 2)+4;
+        b = ((i & 0x7C00) >> 7)+4;
+        pal = (unsigned char *)d_8to24table;
+        for (v=0,k=0,bestdist=10000*10000; v<256; v++,pal+=4) {
+            r1 = (int)r - (int)pal[0];
+            g1 = (int)g - (int)pal[1];
+            b1 = (int)b - (int)pal[2];
+            dist = (r1*r1)+(g1*g1)+(b1*b1);
+            if (dist < bestdist) {
+                k=v;
+                bestdist = dist;
+            }
+        }
+        d_15to8table[i]=k;
+    }
+#else
     int i;
 
     for ( i=0; i<256; ++i )
@@ -78,19 +173,115 @@ void    VID_SetPalette (unsigned char *palette)
     // the status area), so we have to force an update to the entire texture.
     // We can, however, wait for the texture to actually be rendered.
     force_entire_redraw = 1;
+#endif
 }
 
 void    VID_ShiftPalette (unsigned char *palette)
 {
+#ifndef GLQUAKE
     VID_SetPalette(palette);
+#endif
 }
+
+#ifdef GLQUAKE
+void GL_Init (void) {
+    gl_vendor = glGetString (GL_VENDOR);
+    Con_Printf ("GL_VENDOR: %s\n", gl_vendor);
+    gl_renderer = glGetString (GL_RENDERER);
+    Con_Printf ("GL_RENDERER: %s\n", gl_renderer);
+
+    gl_version = glGetString (GL_VERSION);
+    Con_Printf ("GL_VERSION: %s\n", gl_version);
+    gl_extensions = glGetString (GL_EXTENSIONS);
+    Con_Printf ("GL_EXTENSIONS: %s\n", gl_extensions);
+
+    // Con_Printf ("%s %s\n", gl_renderer, gl_version);
+
+    // CheckMultiTextureExtensions ();
+
+    glClearColor (1,0,0,0);
+    glCullFace(GL_FRONT);
+    glEnable(GL_TEXTURE_2D);
+
+    glEnable(GL_ALPHA_TEST);
+    glAlphaFunc(GL_GREATER, 0.666);
+
+    glPolygonMode (GL_FRONT_AND_BACK, GL_FILL);
+    glShadeModel (GL_FLAT);
+
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+    glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+}
+
+void GL_BeginRendering (int *x, int *y, int *width, int *height)
+{
+    extern cvar_t gl_clear;
+
+    *x = *y = 0;
+    *width = vid.width;
+    *height = vid.height;
+}
+
+void GL_EndRendering (void) {
+    glFlush();
+    SDL_GL_SwapWindow(window);
+    Sbar_Changed();
+}
+
+void VID_Init8bitPalette(void)  {
+}
+
+static void Check_Gamma (unsigned char *pal) {
+    float f, inf;
+    unsigned char palette[768];
+    int i;
+
+    if ((i = COM_CheckParm("-gamma")) == 0) {
+        if ((gl_renderer && strstr(gl_renderer, "Voodoo")) ||
+            (gl_vendor && strstr(gl_vendor, "3Dfx")))
+            vid_gamma = 1;
+        else
+            vid_gamma = 0.6; // default to 0.6 on non-3dfx hardware
+    } else
+        vid_gamma = Q_atof(com_argv[i+1]);
+
+    for (i=0 ; i<768 ; i++)
+    {
+        f = pow ( (pal[i]+1)/256.0 , vid_gamma );
+        inf = f*255 + 0.5;
+        if (inf < 0)
+            inf = 0;
+        if (inf > 255)
+            inf = 255;
+        palette[i] = inf;
+    }
+
+    memcpy (pal, palette, sizeof(palette));
+}
+
+qboolean VID_Is8bit(void)
+{
+    return false;
+}
+#endif
 
 void    VID_Init (unsigned char *palette)
 {
-    int pnum, chunk;
-    byte *cache;
-    int cachesize;
+    int pnum;
     Uint32 flags;
+#ifndef GLQUAKE
+    int cachesize, chunk;
+    byte *cache;
+#else
+    char gldir[MAX_OSPATH];
+#endif
 
     // Load the SDL library
     if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO) < 0)
@@ -99,8 +290,10 @@ void    VID_Init (unsigned char *palette)
     // Set up display mode (width and height)
     vid.width = BASEWIDTH;
     vid.height = BASEHEIGHT;
+#ifndef GLQUAKE
     vid.maxwarpwidth = WARP_WIDTH;
     vid.maxwarpheight = WARP_HEIGHT;
+#endif
     if ((pnum=COM_CheckParm("-winsize")))
     {
         if (pnum >= com_argc-2)
@@ -112,9 +305,18 @@ void    VID_Init (unsigned char *palette)
     }
 
     // Set video width, height and flags
+#ifdef GLQUAKE
+    flags = (SDL_WINDOW_OPENGL);
+#else
     flags = 0;
+#endif
+
     if ( COM_CheckParm ("-fullscreen") )
         flags |= SDL_WINDOW_FULLSCREEN;
+
+#if defined(__EMSCRIPTEN__) && defined(GLQUAKE)
+    initialize_gl4es();
+#endif
 
     window = SDL_CreateWindow(
         "Quake", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, vid.width, vid.height, flags
@@ -123,6 +325,7 @@ void    VID_Init (unsigned char *palette)
     if (window == NULL)
         Sys_Error("VID: Couldn't create window: %s\n", SDL_GetError());
 
+#ifndef GLQUAKE
     renderer = SDL_CreateRenderer(window, -1, 0);
 
     if (renderer == NULL)
@@ -150,16 +353,34 @@ void    VID_Init (unsigned char *palette)
     if (pixels == NULL)
         Sys_Error("VID: Not enough memory for 8-bit buffer\n");
 
-    vid.aspect = ((float)vid.height / (float)vid.width) * (320.0 / 240.0);
-    vid.numpages = 1;
-    vid.colormap = host_colormap;
-    vid.fullbright = 256 - LittleLong (*((int *)vid.colormap + 2048));
     VGA_pagebase = vid.buffer = pixels;
     VGA_rowbytes = vid.rowbytes = VGA_width;
     vid.conbuffer = vid.buffer;
     vid.conrowbytes = vid.rowbytes;
     vid.direct = 0;
-    
+#endif
+
+    vid.aspect = ((float)vid.height / (float)vid.width) * (320.0 / 240.0);
+    vid.numpages = 1;
+    vid.colormap = host_colormap;
+    vid.fullbright = 256 - LittleLong (*((int *)vid.colormap + 2048));
+
+#ifdef GLQUAKE
+    gl_context = SDL_GL_CreateContext(window);
+
+    if (gl_context == NULL)
+        printf("VID: OpenGL context could not be created: %s\n", SDL_GetError());
+
+    Cvar_RegisterVariable (&gl_ztrick);
+
+    GL_Init();
+
+    sprintf (gldir, "%s/glquake", com_gamedir);
+    Sys_mkdir (gldir);
+
+    Check_Gamma(palette);
+    VID_SetPalette(palette);
+#else
     // allocate z buffer and surface cache
     chunk = vid.width * vid.height * sizeof (*d_pzbuffer);
     cachesize = D_SurfaceCacheForRes (vid.width, vid.height);
@@ -173,6 +394,7 @@ void    VID_Init (unsigned char *palette)
     cache = (byte *) d_pzbuffer
             + vid.width * vid.height * sizeof (*d_pzbuffer);
     D_InitCaches (cache, cachesize);
+#endif
 
     // initialize the mouse
     SDL_ShowCursor(0);
@@ -191,6 +413,12 @@ void    VID_Shutdown (void)
         format = NULL;
     }
 
+#ifdef GLQUAKE
+    if (gl_context != NULL) {
+        SDL_GL_DeleteContext(gl_context);
+        gl_context = NULL;
+    }
+#else
     if (texture != NULL) {
         SDL_DestroyTexture(texture);
         texture = NULL;
@@ -200,6 +428,7 @@ void    VID_Shutdown (void)
         SDL_DestroyRenderer(renderer);
         renderer = NULL;
     }
+#endif
 
     if (window != NULL) {
         SDL_DestroyWindow(window);
@@ -209,6 +438,7 @@ void    VID_Shutdown (void)
     SDL_Quit();
 }
 
+#ifndef GLQUAKE
 void    VID_Update (vrect_t *rects)
 {
     vrect_t *rect;
@@ -261,7 +491,6 @@ void D_BeginDirectRect (int x, int y, byte *pbitmap, int width, int height)
     }
 }
 
-
 /*
 ================
 D_EndDirectRect
@@ -274,7 +503,7 @@ void D_EndDirectRect (int x, int y, int width, int height)
     // redrawing.
     force_entire_redraw = 1;
 }
-
+#endif
 
 /*
 ================

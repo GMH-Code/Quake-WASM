@@ -338,10 +338,6 @@ void GL_MakeAliasModelDisplayLists (model_t *m, aliashdr_t *hdr)
 			fwrite (&commands, numcommands * sizeof(commands[0]), 1, f);
 			fwrite (&vertexorder, numorder * sizeof(vertexorder[0]), 1, f);
 			fclose (f);
-
-#ifdef __EMSCRIPTEN__
-			wasm_sync_fs();
-#endif
 		}
 	}
 
