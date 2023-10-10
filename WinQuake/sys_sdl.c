@@ -58,13 +58,14 @@ void Sys_Printf (char *fmt, ...)
 
 void Sys_Quit (void)
 {
-	Host_Shutdown();
+    Host_Shutdown();
 #ifdef __EMSCRIPTEN__
-	EM_ASM(
-		Module.showConsole();
-	);
+    EM_ASM(
+        if (typeof Module.showConsole === 'function')
+            Module.showConsole();
+    );
 #endif
-	exit(0);
+    exit(0);
 }
 
 void Sys_Init(void)
@@ -483,7 +484,8 @@ int main (int c, char **v)
 
 #ifdef __EMSCRIPTEN__
     EM_ASM(
-        Module.hideConsole();
+        if (typeof Module.hideConsole === 'function')
+            Module.hideConsole();
     );
 #endif
 
