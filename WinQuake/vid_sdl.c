@@ -48,10 +48,6 @@ unsigned short  d_8to16table[256];
 int    VGA_width, VGA_height, VGA_rowbytes, VGA_bufferrowbytes = 0;
 byte    *VGA_pagebase;
 
-// Background 8-bit framebuffer
-Uint8 *pixels;
-byte force_entire_redraw = 0;
-
 static SDL_Window *window = NULL;
 
 static qboolean mouse_avail;
@@ -65,7 +61,6 @@ static qboolean mouse_ready = false;
 void (*vid_menudrawfn)(void) = NULL;
 void (*vid_menukeyfn)(int key) = NULL;
 SDL_Color colors[256];
-SDL_PixelFormat *format;
 
 #ifdef GLQUAKE
 viddef_t vid;  // Global video state
@@ -84,6 +79,9 @@ static SDL_GLContext *gl_context = NULL;
 extern viddef_t vid;  // Global video state
 static SDL_Renderer *renderer = NULL;
 static SDL_Texture *texture = NULL;
+static SDL_PixelFormat *format = NULL;
+Uint8 *pixels = NULL;  // Background 8-bit framebuffer
+byte force_entire_redraw = 0;
 #endif
 
 #ifndef GLQUAKE
@@ -403,6 +401,12 @@ void    VID_Init (unsigned char *palette)
 
 void    VID_Shutdown (void)
 {
+#ifdef GLQUAKE
+    if (gl_context != NULL) {
+        SDL_GL_DeleteContext(gl_context);
+        gl_context = NULL;
+    }
+#else
     if (pixels != NULL) {
         free(pixels);
         pixels = NULL;
@@ -413,12 +417,6 @@ void    VID_Shutdown (void)
         format = NULL;
     }
 
-#ifdef GLQUAKE
-    if (gl_context != NULL) {
-        SDL_GL_DeleteContext(gl_context);
-        gl_context = NULL;
-    }
-#else
     if (texture != NULL) {
         SDL_DestroyTexture(texture);
         texture = NULL;
