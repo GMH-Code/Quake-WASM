@@ -613,26 +613,29 @@ void Sys_SendKeyEvents(void)
                 break;
 
             case SDL_MOUSEMOTION:
+#ifdef __EMSCRIPTEN__
+                // The pointer does not get warped to the centre of the canvas
+                // when captured in WebAssembly -- it is constrained to the
+                // bounding box, but relative moves can still travel outside
+                if (mouse_ready) {
+                    mouse_x = event.motion.xrel*2;
+                    mouse_y = event.motion.yrel*2;
+                }
+                else
+                    mouse_ready = true;  // Drop the first (usually large) movement
+#else
                 if ( (event.motion.x != (vid.width/2)) ||
                      (event.motion.y != (vid.height/2)) ) {
-#ifdef __EMSCRIPTEN__
-                    if (mouse_ready) {
-                        mouse_x = event.motion.xrel*2;
-                        mouse_y = event.motion.yrel*2;
-                    }
-                    else
-                        mouse_ready = true;  // Drop the first (usually large) movement
-#else
                     mouse_x = event.motion.xrel*10;
                     mouse_y = event.motion.yrel*10;
-                    if ( (event.motion.x < (Sint32)((vid.width/2)-(vid.width/4))) ||
-                         (event.motion.x > (Sint32)((vid.width/2)+(vid.width/4))) ||
-                         (event.motion.y < (Sint32)((vid.height/2)-(vid.height/4))) ||
-                         (event.motion.y > (Sint32)((vid.height/2)+(vid.height/4))) ) {
-                        SDL_WarpMouseInWindow(window, vid.width/2, vid.height/2);
+                    if ( (event.motion.x < ((vid.width/2)-(vid.width/4))) ||
+                         (event.motion.x > ((vid.width/2)+(vid.width/4))) ||
+                         (event.motion.y < ((vid.height/2)-(vid.height/4))) ||
+                         (event.motion.y > ((vid.height/2)+(vid.height/4))) ) {
+                        SDL_WarpMouse(vid.width/2, vid.height/2);
                     }
-#endif
                 }
+#endif
                 break;
 
             case SDL_QUIT:
