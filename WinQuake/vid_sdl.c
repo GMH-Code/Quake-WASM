@@ -396,7 +396,11 @@ void    VID_Init (unsigned char *palette)
 
     // initialize the mouse
     SDL_ShowCursor(0);
+#ifndef __EMSCRIPTEN__
+    // In WASM there appears to be a timing issue with this, so if we are using
+    // WASM, we will postpone the switch until the first mouse move is detected
     SDL_SetRelativeMouseMode(SDL_TRUE);
+#endif
 }
 
 void    VID_Shutdown (void)
@@ -620,9 +624,10 @@ void Sys_SendKeyEvents(void)
                 if (mouse_ready) {
                     mouse_x = event.motion.xrel*2;
                     mouse_y = event.motion.yrel*2;
-                }
-                else
+                } else {
+                    SDL_SetRelativeMouseMode(SDL_TRUE);  // Delayed switch to relative mode
                     mouse_ready = true;  // Drop the first (usually large) movement
+                }
 #else
                 if ( (event.motion.x != (vid.width/2)) ||
                      (event.motion.y != (vid.height/2)) ) {

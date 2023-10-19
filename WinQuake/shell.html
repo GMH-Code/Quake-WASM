@@ -24,6 +24,7 @@
         border: 1px solid rgb(64, 64, 64);
         resize: none;
         display: none;
+        outline: none;
       }
       div.emscripten { text-align: center; }
       /* the canvas *must not* have any border or padding, or mouse coords will be wrong */
@@ -34,6 +35,7 @@
         height: calc(min(100vh, 100vw * 0.75));
         margin-top: calc(0.5 * (100vh - (min(100vh, 100vw * 0.75))));
         display: none;
+        outline: none;
       }
 
       .spinner {
@@ -136,11 +138,13 @@
         hideConsole: function() {
           outputElement.style.display = 'none';
           canvasElement.style.display = 'block';
+          canvasElement.focus();
         },
         showConsole: function() {
           canvasElement.style.display = 'none';
           outputElement.style.display = 'block';
           outputElement.scrollTop = outputElement.scrollHeight;
+          outputElement.focus();
         },
         totalDependencies: 0,
         monitorRunDependencies: function(left) {
