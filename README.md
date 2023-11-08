@@ -62,7 +62,7 @@ For security, I recommend only using the *SHA256* hash to verify these files' co
     SHA256: 35A9C55E5E5A284A159AD2A62E0E8DEF23D829561FE2F54EB402DBC0A9A946AF
 
     Filename: PAK1.PAK
-    Filesize: 34,257,856 bytes
+    File size: 34,257,856 bytes
     MD5: D76B3E5678F0B64AC74CE5E340E6A685
     SHA1: 6FD0D1643047612F41AFB2001B972D830C792921
     SHA256: 94E355836EC42BC464E4CBE794CFB7B5163C6EFA1BCC575622BB36475BF1CF30
@@ -79,15 +79,15 @@ Performance
 
 Quake-WASM performs consistently well and will almost always hit 60FPS in a web browser, even on performance-limited systems.
 
-Testing involved running identical `timerefresh` and `timedemo` benchmarks, ensuring versions were configured with the same settings.
+Testing involved running identical `timedemo` benchmarks, ensuring versions were configured with the same settings.
 
 ### Quake-WASM vs. WebAssembly DosBox
 
-This version performed about 50 - 60 times faster than it did with the WebAssembly version of DosBox, with the optimised x86 assembler code compiled and linked.  DosBox is obviously going to be at a serious disadvantage here since running a general-purpose x86 emulator in a web browser is very inefficient; *Quake-WASM* bypasses that layer and so is closer to native code.
+This version performed about 65 - 80 times faster than it did with the WebAssembly version of DosBox, with the optimised x86 assembler code compiled and linked.  DosBox is obviously going to be at a serious disadvantage here since running a general-purpose x86 emulator in a web browser is very inefficient; *Quake-WASM* bypasses that layer and so is closer to native code.
 
 ### Quake-WASM vs. Native DosBox
 
-When testing, this version (still running in a browser) was consistently around twice as fast as running Quake in DosBox on an x86 system, even with the x86 assembler included.
+When testing, this version (still running in a browser) was consistently around 2.5 times as fast as running Quake in DosBox on an x86 system, even with the x86 assembler included.
 
 ### Notes on x86 Assembler
 
