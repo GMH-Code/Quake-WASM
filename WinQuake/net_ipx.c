@@ -132,7 +132,7 @@ static unsigned short ipx_ip;
 static int net_acceptsocket = -1;
 static int net_controlsocket;
 
-static void IPX_PollProcedure(void);
+static void IPX_PollProcedure(void *arg);
 static PollProcedure pollProcedure = {NULL, 0.0, IPX_PollProcedure};
 
 //=============================================================================
@@ -189,7 +189,7 @@ static void IPX_RelinquishControl(void)
 }
 
 
-void IPX_PollProcedure(void)
+void IPX_PollProcedure(void *arg)
 {
 	IPX_RelinquishControl();
 	SchedulePollProcedure(&pollProcedure, 0.01);
