@@ -458,17 +458,19 @@ void    VID_Update (vrect_t *rects)
     if (SDL_LockTexture(texture, NULL, &rgb_pixels, &rgb_pitch) < 0)
         Sys_Error("VID: Couldn't lock texture: %s\n", SDL_GetError());
 
+    uint32_t* rbg_pixels_i = (uint32_t*)rgb_pixels;
+
     if (force_entire_redraw)
     {
         // Render everything
-        render_rgb((uint32_t*)rgb_pixels, 0, 0, VGA_width, VGA_height);
+        render_rgb(rbg_pixels_i, 0, 0, VGA_width, VGA_height);
         force_entire_redraw = 0;
     }
     else
     {
         // Render delta regions
         for (rect = rects; rect; rect = rect->pnext)
-            render_rgb((uint32_t*)rgb_pixels, rect->x, rect->y, rect->width, rect->height);
+            render_rgb(rbg_pixels_i, rect->x, rect->y, rect->width, rect->height);
     }
 
     SDL_UnlockTexture(texture);
