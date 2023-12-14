@@ -35,6 +35,15 @@ char *cachedir = "/tmp";
 cvar_t  sys_linerefresh = {"sys_linerefresh","0"};// set for entity display
 cvar_t  sys_nostdout = {"sys_nostdout","0"};
 
+// Shared variables used in main / main_loop for Emscripten
+static double time, oldtime, newtime;
+extern int vcrFile;
+extern int recording;
+static int frame;
+#ifdef __EMSCRIPTEN__
+static qboolean restore_busy;
+#endif
+
 // =======================================================================
 // General routines
 // =======================================================================
@@ -64,6 +73,9 @@ void Sys_Quit (void)
         if (typeof Module.showConsole === 'function')
             Module.showConsole();
     );
+    // Don't come back to the main loop after exiting, but do finish any async
+    // saves
+    emscripten_pause_main_loop();
 #endif
     exit(0);
 }
@@ -372,9 +384,8 @@ void Sys_LineRefresh(void)
 
 void Sys_Sleep(void)
 {
-#ifdef __EMSCRIPTEN__
-	emscripten_sleep(1);
-#else
+	// Sleeping is now done outside the main loop with Emscripten
+#ifndef __EMSCRIPTEN__
 	SDL_Delay(1);
 #endif
 }
@@ -390,15 +401,15 @@ void moncontrol(int x)
 }
 
 #ifdef __EMSCRIPTEN__
-EM_JS(int, wasm_check_restore, (), {
-	return Module.restore_complete;
+EM_JS(int, wasm_restore_busy, (), {
+	return Module.restore_busy;
 });
 
 void wasm_init_fs(void)
 {
 	// Sync from IDBFS in the background
 	EM_ASM(
-		Module.restore_complete = 0;
+		Module.restore_busy = 1;
 #ifdef WASM_SAVE_PAKS
 		FS.mkdir("/id1");
 		FS.mount(IDBFS, {}, "/id1");
@@ -412,17 +423,9 @@ void wasm_init_fs(void)
 			else
 				console.info("Data loaded.");
 
-			Module.restore_complete = 1;
+			Module.restore_busy = 0;
 		});
 	);
-
-	printf("Waiting for data to be restored...\n");
-
-	// Sleep until IDBFS is ready
-	while (!wasm_check_restore())
-		emscripten_sleep(100);
-
-	printf("Data restoration complete.\n");
 }
 
 void wasm_sync_fs(void)
@@ -442,12 +445,7 @@ void wasm_sync_fs(void)
 
 int main (int c, char **v)
 {
-
-	double		time, oldtime, newtime;
 	quakeparms_t parms;
-	extern int vcrFile;
-	extern int recording;
-	static int frame;
 
 #ifdef __EMSCRIPTEN__
 	wasm_init_fs();
@@ -484,16 +482,37 @@ int main (int c, char **v)
 
     Cvar_RegisterVariable (&sys_nostdout);
 
+    oldtime = Sys_FloatTime () - 0.1;
+
 #ifdef __EMSCRIPTEN__
-    EM_ASM(
-        if (typeof Module.hideConsole === 'function')
-            Module.hideConsole();
-    );
+    restore_busy = true;
+#ifdef WASM_BENCHMARK
+    emscripten_set_main_loop_timing(EM_TIMING_SETIMMEDIATE, 0);
+#endif  // WASM_BENCHMARK
+    emscripten_set_main_loop(main_loop, 0, 0);
+#else
+    while (1)
+        main_loop();
+#endif  // __EMSCRIPTEN__
+}
+
+void main_loop(void)
+{
+#ifdef __EMSCRIPTEN__
+        if (restore_busy) {
+            // Call JavaScript code to check restore status
+            if (wasm_restore_busy())
+                return;
+
+            EM_ASM(
+                if (typeof Module.hideConsole === 'function')
+                Module.hideConsole();
+            );
+
+            restore_busy = false;
+        }
 #endif
 
-    oldtime = Sys_FloatTime () - 0.1;
-    while (1)
-    {
         // find time spent rendering last frame
         newtime = Sys_FloatTime ();
         time = newtime - oldtime;
@@ -503,7 +522,7 @@ int main (int c, char **v)
             if (time < sys_ticrate.value && (vcrFile == -1 || recording) )
             {
                 Sys_Sleep();
-                continue;       // not time to run a server only tic yet
+                return;       // not time to run a server only tic yet
             }
             time = sys_ticrate.value;
         }
@@ -518,11 +537,9 @@ int main (int c, char **v)
         Host_Frame (time);
         moncontrol(0);
 
-// graphic debugging aids
+        // graphic debugging aids
         if (sys_linerefresh.value)
             Sys_LineRefresh ();
-    }
-
 }
 
 

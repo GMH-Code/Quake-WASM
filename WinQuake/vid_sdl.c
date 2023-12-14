@@ -231,10 +231,6 @@ void GL_EndRendering (void) {
     glFlush();
     SDL_GL_SwapWindow(window);
     Sbar_Changed();
-
-#ifdef __EMSCRIPTEN__
-    emscripten_sleep(0);
-#endif
 }
 
 void VID_Init8bitPalette(void)  {
@@ -283,10 +279,6 @@ void    VID_Init (unsigned char *palette)
     byte *cache;
 #else
     char gldir[MAX_OSPATH];
-#endif
-
-#ifdef __EMSCRIPTEN__
-    SDL_SetHint(SDL_HINT_EMSCRIPTEN_ASYNCIFY, "0");
 #endif
 
     // Load the SDL library
@@ -480,10 +472,6 @@ void    VID_Update (vrect_t *rects)
         Sys_Error("VID: Couldn't render texture: %s\n", SDL_GetError());
 
     SDL_RenderPresent(renderer);
-
-#ifdef __EMSCRIPTEN__
-    emscripten_sleep(0);
-#endif
 }
 
 /*

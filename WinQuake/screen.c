@@ -757,6 +757,10 @@ keypress.
 */
 int SCR_ModalMessage (char *text)
 {
+#ifdef __EMSCRIPTEN__
+	// We can't block the main loop now we aren't using ASYNCIFY
+	return true;
+#else
 	if (cls.state == ca_dedicated)
 		return true;
 
@@ -774,15 +778,13 @@ int SCR_ModalMessage (char *text)
 	{
 		key_count = -1;		// wait for a key down and up
 		Sys_SendKeyEvents ();
-#ifdef __EMSCRIPTEN__
-		emscripten_sleep(1);
-#endif
 	} while (key_lastpress != 'y' && key_lastpress != 'n' && key_lastpress != K_ESCAPE);
 
 	scr_fullupdate = 0;
 	SCR_UpdateScreen ();
 
 	return key_lastpress == 'y';
+#endif
 }
 
 
