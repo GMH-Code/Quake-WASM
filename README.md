@@ -35,15 +35,17 @@ It is straightforward to obtain `PAK0.PAK`:
 - Extract `resource.1` -- Modern versions of 7-Zip and WinRAR, and probably other popular archivers, can do this.
 - The `PAK0.PAK` file is in the `ID1` folder.
 
-### Shareware Note
-
-The licence for the shareware version of Quake only appears to permit duplication of the archive that was originally obtained from an official source, so it appears as though, understandably, their contents cannot be distributed by themselves.  John Carmack's statement in the release of Quake's source code, the current state of Linux ports, and other findings on the Internet, also suggest the licence hasn't changed.
-
-I am aware that there are various DOOM ports running online (and offline) that embed the IWAD game data to enable an automatic start, but it looks like this is *not* permitted for Quake.
-
 ### PAK1.PAK
 
 `PAK1.PAK` file is needed in addition to `PAK0.PAK` if you want features from the complete version.  This file is provided when you buy the full game.
+
+### Licence Notes
+
+The licence for the shareware version of Quake only appears to permit duplication of the archive that was originally obtained from an official source, so it appears as though, understandably, the archive's contents cannot be distributed nor embedded separately.  John Carmack's statement in the release of Quake's source code, the current state of Linux ports, and other findings on the Internet, also suggest the licence hasn't changed.
+
+I am aware that there are various DOOM ports running online (and offline) that embed IWAD game data to enable an automatic start of the shareware version, but it looks like this is *not* permitted for Quake.
+
+The full version carries an even more restrictive licence -- so do not be tempted to host the full version on a public server!
 
 ### Checksums
 
@@ -111,7 +113,19 @@ Custom maps, models, textures, sounds, and animated sprites should also work, es
 
 Saving is supported, even when hosting several mods on the same URL.  This works exactly the same way as the desktop version, except user data is kept in a separate location.
 
-QuakeC is often referred to as compiled, but, to clarify, it actually compiles to bytecode rather than native machine mode, similar to *CPython*.  This bytecode is interpreted at runtime.  Since this interpreter works in WebAssembly, most Quake 1 mods should be playable within your browser.
+QuakeC is often referred to as compiled, but it actually compiles to bytecode rather than native machine mode, similar to *CPython*.  This bytecode is then interpreted at runtime.  This interpreter works in WebAssembly, so most Quake 1 mods should be playable within your browser.
+
+Mission Packs
+-------------
+
+Quake-WASM supports:
+
+- Mission Pack 1: Scourge of Armagon
+- Mission Pack 2: Dissolution of Eternity
+
+The easiest way to use these is to simply rename the mission pack's PAK file as `PAK2.PAK` and supply it with the other files.  The game should then be started with the appropriate command-line parameter (`-hipnotic` or `-rogue` respectively), otherwise some of the extra features will be missing, such as the extended status area.
+
+If you want to check that the mission pack is working properly, start it up, type `impulse 9` in the console, and switch through the weapons.  Special weapons will show within a red box in the status area.
 
 Command-Line Arguments
 ----------------------
