@@ -506,7 +506,7 @@ void main_loop(void)
 
             EM_ASM(
                 if (typeof Module.hideConsole === 'function')
-                Module.hideConsole();
+                    Module.hideConsole();
             );
 
             restore_busy = false;
