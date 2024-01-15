@@ -292,7 +292,18 @@ void    VID_Init (unsigned char *palette)
     vid.maxwarpwidth = WARP_WIDTH;
     vid.maxwarpheight = WARP_HEIGHT;
 #endif
-    if ((pnum=COM_CheckParm("-winsize")))
+    // Support for -width and -height parameters
+    if ((pnum = COM_CheckParm("-width")))
+    {
+        vid.width = Q_atoi(com_argv[pnum+1]);
+        vid.height = vid.width * 3 / 4; // Set video height with default aspect ratio
+    }
+
+    if ((pnum = COM_CheckParm("-height")))
+        vid.height = Q_atoi(com_argv[pnum+1]);
+
+    // Support for -winsize parameter
+    if ((pnum = COM_CheckParm("-winsize")))
     {
         if (pnum >= com_argc-2)
             Sys_Error("VID: -winsize <width> <height>\n");
@@ -302,7 +313,16 @@ void    VID_Init (unsigned char *palette)
             Sys_Error("VID: Bad window width/height\n");
     }
 
-    // Set video width, height and flags
+    if (vid.width < 320)
+        vid.width = 320;
+
+    if (vid.height < 200)
+        vid.height = 200;
+
+    // Match console size to video
+    vid.conwidth = vid.width;
+    vid.conheight = vid.height;
+
 #ifdef GLQUAKE
     flags = (SDL_WINDOW_OPENGL);
 #else
@@ -342,8 +362,8 @@ void    VID_Init (unsigned char *palette)
     format = SDL_AllocFormat(SDL_PIXELFORMAT_RGB888);
     SDL_SetWindowTitle(window, "Quake");
     // now know everything we need to know about the buffer
-    VGA_width = vid.conwidth = vid.width;
-    VGA_height = vid.conheight = vid.height;
+    VGA_width = vid.width;
+    VGA_height = vid.height;
 
     // Allocate memory for 8-bit background framebuffer
     pixels = malloc(VGA_width * VGA_height);

@@ -446,6 +446,7 @@ void wasm_sync_fs(void)
 int main (int c, char **v)
 {
 	quakeparms_t parms;
+	int pnum;
 
 #ifdef __EMSCRIPTEN__
 	wasm_init_fs();
@@ -456,16 +457,23 @@ int main (int c, char **v)
 //	signal(SIGFPE, floating_point_exception_handler);
 	signal(SIGFPE, SIG_IGN);
 
-	parms.memsize = 16*1024*1024;
-	parms.membase = malloc (parms.memsize);
-	parms.basedir = basedir;
-	parms.cachedir = NULL;  // Using 'cachedir' stops standalone .cfg files from execing
+    COM_InitArgv(c, v);
+    parms.argc = com_argc;
+    parms.argv = com_argv;
+    parms.memsize = 16*1024*1024;
 
-	COM_InitArgv(c, v);
-	parms.argc = com_argc;
-	parms.argv = com_argv;
+    // Support for -mem and -heapsize parameters
+    if ((pnum = COM_CheckParm("-mem")))
+        parms.memsize = Q_atoi(com_argv[pnum + 1]) * 1024 * 1024;
 
-	Sys_Init();
+    if ((pnum = COM_CheckParm("-heapsize")))
+        parms.memsize = Q_atoi(com_argv[pnum + 1]) * 1024;
+
+    parms.membase = malloc (parms.memsize);
+    parms.basedir = basedir;
+    parms.cachedir = NULL;  // Using 'cachedir' stops standalone .cfg files from execing
+
+    Sys_Init();
 
     Host_Init(&parms);
 
@@ -475,10 +483,15 @@ int main (int c, char **v)
     Con_Printf("SDL2 & WASM conversion by\n");
     Con_Printf("Gregory Maynard-Hoare\n\n");
 
-    for (int arg_num=0; arg_num<c; arg_num++)
-        Con_Printf("Startup arg %i: %s\n", arg_num, v[arg_num]);
+    if (com_argc > 1)
+    {
+        Con_Printf("Startup args:");
 
-    Con_Printf("\n");
+        for (pnum=1; pnum<com_argc; pnum++)
+            Con_Printf(" %s", com_argv[pnum]);
+
+        Con_Printf("\n\n");
+    }
 
     Cvar_RegisterVariable (&sys_nostdout);
 
