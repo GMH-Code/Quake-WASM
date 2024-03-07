@@ -68,15 +68,6 @@ void Sys_Printf (char *fmt, ...)
 void Sys_Quit (void)
 {
     Host_Shutdown();
-#ifdef __EMSCRIPTEN__
-    EM_ASM(
-        if (typeof Module.showConsole === 'function')
-            Module.showConsole();
-    );
-    // Don't come back to the main loop after exiting, but do finish any async
-    // saves
-    emscripten_pause_main_loop();
-#endif
     exit(0);
 }
 

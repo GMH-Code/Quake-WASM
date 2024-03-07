@@ -22,6 +22,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "quakedef.h"
 #include "r_local.h"
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 /*
 
 A server can allways be started, even if the system started out as a client
@@ -943,6 +947,17 @@ void Host_Shutdown(void)
 		return;
 	}
 	isdown = true;
+
+#ifdef __EMSCRIPTEN__
+	EM_ASM(
+		if (typeof Module.showConsole === 'function')
+			Module.showConsole();
+	);
+
+	// Don't come back to the main loop after exiting.  Emscripten's runtime
+	// stays active, so saves in progress should still complete.
+	emscripten_cancel_main_loop();
+#endif
 
 // keep Con_Printf from trying to update the screen
 	scr_disabled_for_loading = true;
