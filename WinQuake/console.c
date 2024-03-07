@@ -32,7 +32,13 @@ int 		con_linewidth;
 
 float		con_cursorspeed = 4;
 
-#define		CON_TEXTSIZE	16384
+#ifdef GLQUAKE
+	// Set buffer to max resolution of 2048 * 1536 / 8 / 8
+	#define CON_TEXTSIZE 49152
+#else
+	// Set buffer to max resolution of 1280 * 960 / 8 / 8
+	#define CON_TEXTSIZE 19200
+#endif
 
 qboolean 	con_forcedup;		// because no entities to refresh
 
