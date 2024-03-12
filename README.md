@@ -155,6 +155,22 @@ Simply forcing the game to run registered by default is not a good idea because 
 - Breaks proper compatibility with the official shareware version, most notably when accessing levels in the *Introduction*.
 - Potentially breaks third-party add-ons that use assets from the full version, if only the shareware files are present.
 
+Recording Demos
+---------------
+
+Recording demos is supported.  You can start one by typing something like this in the console:
+
+    skill 3
+    record mydemo-e1m1 e1m1
+
+To stop the demo:
+
+    stop
+
+The file will be saved in the browser database, but you will also be given the opportunity to export it if you want to.
+
+The demo can be played back with `playdemo mydemo-e1m1`.
+
 Networking Support
 ------------------
 

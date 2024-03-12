@@ -80,6 +80,7 @@
     </div>
     <textarea class="emscripten" id="output" readonly></textarea>
     <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
+    <a id="exportFile" hidden=1></a>
     
     <script type='text/javascript'>
       var statusElement = document.getElementById('status');
@@ -87,6 +88,7 @@
       var spinnerElement = document.getElementById('spinner');
       var canvasElement = document.getElementById('canvas');
       var outputElement = document.getElementById('output');
+      var exportElement = document.getElementById('exportFile');
 
       var Module = {
         preRun: [],
@@ -145,6 +147,20 @@
           outputElement.style.display = 'block';
           outputElement.scrollTop = outputElement.scrollHeight;
           outputElement.focus();
+        },
+        exportFile: function(filePath) {
+          try {
+            const filePathSplit = filePath.split('/');
+            const dataArray = new Uint8Array(FS.readFile(filePath));
+            const dataBlob = new Blob([dataArray], {type: 'application/octet-stream'});
+            const objURL = URL.createObjectURL(dataBlob);
+            exportElement.href = objURL;
+            exportElement.download = filePathSplit[filePathSplit.length - 1];
+            exportElement.click();
+            URL.revokeObjectURL(objURL);
+          } catch (error) {
+            console.error('Error exporting file:', error);
+          }
         },
         totalDependencies: 0,
         monitorRunDependencies: function(left) {

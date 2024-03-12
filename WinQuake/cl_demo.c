@@ -20,7 +20,15 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "quakedef.h"
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 void CL_FinishTimeDemo (void);
+
+#ifdef __EMSCRIPTEN__
+static char rec_demo_path[MAX_OSPATH];
+#endif
 
 /*
 ==============================================================================
@@ -186,6 +194,12 @@ void CL_Stop_f (void)
 
 #ifdef __EMSCRIPTEN__
 	wasm_sync_fs();
+
+	// Prompt the user to save the demo, if they want to.
+	EM_ASM({
+		if (typeof Module.exportFile === 'function')
+			Module.exportFile(UTF8ToString($0));
+	}, rec_demo_path);
 #endif
 
 	Con_Printf ("Completed demo\n");
@@ -258,6 +272,10 @@ void CL_Record_f (void)
 
 	cls.forcetrack = track;
 	fprintf (cls.demofile, "%i\n", cls.forcetrack);
+
+#ifdef __EMSCRIPTEN__
+	memcpy(rec_demo_path, name, sizeof(rec_demo_path));
+#endif
 	
 	cls.demorecording = true;
 }
