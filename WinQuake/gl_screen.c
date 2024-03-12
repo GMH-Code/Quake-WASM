@@ -591,6 +591,9 @@ SCR_ScreenShot_f
 */  
 void SCR_ScreenShot_f (void) 
 {
+#ifdef __EMSCRIPTEN__
+	Con_Printf("Targa screenshots are disabled in Quake-WASM.\n");
+#else
 	byte		*buffer;
 	char		pcxname[80]; 
 	char		checkname[MAX_OSPATH];
@@ -599,9 +602,6 @@ void SCR_ScreenShot_f (void)
 // find a file name to save it to 
 // 
 
-#ifdef __EMSCRIPTEN__
-	strcpy(pcxname,"quake.tga");
-#else
 	strcpy(pcxname,"quake00.tga");
 		
 	for (i=0 ; i<=99 ; i++) 
@@ -617,7 +617,6 @@ void SCR_ScreenShot_f (void)
 		Con_Printf ("SCR_ScreenShot_f: Couldn't create a PCX file\n"); 
 		return;
  	}
-#endif
 
 	buffer = malloc(glwidth*glheight*3 + 18);
 	memset (buffer, 0, 18);
@@ -642,11 +641,8 @@ void SCR_ScreenShot_f (void)
 
 	free (buffer);
 
-#ifdef __EMSCRIPTEN__
-	wasm_sync_fs();
-#endif
-
 	Con_Printf ("Wrote %s\n", pcxname);
+#endif // __EMSCRIPTEN__
 } 
 
 

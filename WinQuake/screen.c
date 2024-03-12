@@ -616,13 +616,13 @@ SCR_ScreenShot_f
 */  
 void SCR_ScreenShot_f (void) 
 { 
+#ifdef __EMSCRIPTEN__
+	Con_Printf("PCX screenshots are disabled in Quake-WASM.\n");
+#else
 	int     i; 
 	char		pcxname[80]; 
 	char		checkname[MAX_OSPATH];
 
-#ifdef __EMSCRIPTEN__
-	strcpy(pcxname,"quake.pcx");
-#else
 // 
 // find a file name to save it to 
 // 
@@ -641,7 +641,6 @@ void SCR_ScreenShot_f (void)
 		Con_Printf ("SCR_ScreenShot_f: Couldn't create a PCX file\n"); 
 		return;
  	}
-#endif
 
 // 
 // save the pcx file 
@@ -655,11 +654,8 @@ void SCR_ScreenShot_f (void)
 	D_DisableBackBufferAccess ();	// for adapters that can't stay mapped in
 									//  for linear writes all the time
 
-#ifdef __EMSCRIPTEN__
-	wasm_sync_fs();
-#endif
-
 	Con_Printf ("Wrote %s\n", pcxname);
+#endif // __EMSCRIPTEN__
 } 
 
 
