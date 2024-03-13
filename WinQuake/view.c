@@ -22,6 +22,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "quakedef.h"
 #include "r_local.h"
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 /*
 
 The view is allowed to move slightly from it's true position for bobbing,
@@ -303,6 +307,14 @@ qboolean V_CheckGamma (void)
 	BuildGammaTable (v_gamma.value);
 	vid.recalc_refdef = 1;				// force a surface cache flush
 	
+#if defined(__EMSCRIPTEN__) && defined(GLQUAKE)
+	// Post-process gamma in the browser, if possible
+	EM_ASM_DOUBLE({
+		if (typeof Module.setGamma === 'function')
+			Module.setGamma($0);
+	}, v_gamma.value);
+#endif
+
 	return true;
 }
 

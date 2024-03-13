@@ -162,6 +162,11 @@
             console.error('Error exporting file:', error);
           }
         },
+        setGamma: function(vidGamma) {
+          vidGamma = Number(Number(vidGamma).toFixed(2));
+          console.info('Detected canvas gamma change: ' + vidGamma);
+          canvasElement.style.filter = 'brightness(' + ((1.35 - vidGamma) * 2) + ')';
+        },
         totalDependencies: 0,
         monitorRunDependencies: function(left) {
           this.totalDependencies = Math.max(this.totalDependencies, left);
