@@ -417,6 +417,9 @@ void M_SinglePlayer_Key (int key)
 				if (!SCR_ModalMessage("Are you sure you want to\nstart a new game?\n"))
 					break;
 			key_dest = key_game;
+#ifdef __EMSCRIPTEN__
+			wasm_capture_mouse();
+#endif
 			if (sv.active)
 				Cbuf_AddText ("disconnect\n");
 			Cbuf_AddText ("maxplayers 1\n");
@@ -541,6 +544,9 @@ void M_Load_Key (int k)
 			return;
 		m_state = m_none;
 		key_dest = key_game;
+#ifdef __EMSCRIPTEN__
+		wasm_capture_mouse();
+#endif
 
 	// Host_Loadgame_f can't bring up the loading plaque because too much
 	// stack space has been used, so do it now
@@ -580,6 +586,9 @@ void M_Save_Key (int k)
 	case K_ENTER:
 		m_state = m_none;
 		key_dest = key_game;
+#ifdef __EMSCRIPTEN__
+		wasm_capture_mouse();
+#endif
 		Cbuf_AddText (va("save s%i\n", load_cursor));
 		return;
 
@@ -1253,6 +1262,9 @@ void M_Options_Key (int k)
 			break;
 		case 1:
 			m_state = m_none;
+#ifdef __EMSCRIPTEN__
+			wasm_capture_mouse();
+#endif
 			Con_ToggleConsole_f ();
 			break;
 		case 2:
@@ -1958,6 +1970,9 @@ forward:
 		m_return_onerror = true;
 		key_dest = key_game;
 		m_state = m_none;
+#ifdef __EMSCRIPTEN__
+		wasm_capture_mouse();
+#endif
 
 		if (SerialConfig)
 			Cbuf_AddText (va ("connect \"%s\"\n", serialConfig_phone));
@@ -2317,6 +2332,9 @@ void M_LanConfig_Key (int key)
 			m_return_onerror = true;
 			key_dest = key_game;
 			m_state = m_none;
+#ifdef __EMSCRIPTEN__
+			wasm_capture_mouse();
+#endif
 			Cbuf_AddText ( va ("connect \"%s\"\n", lanConfig_joinname) );
 			break;
 		}
@@ -2991,6 +3009,9 @@ void M_ServerList_Key (int k)
 		slist_sorted = false;
 		key_dest = key_game;
 		m_state = m_none;
+#ifdef __EMSCRIPTEN__
+		wasm_capture_mouse();
+#endif
 		Cbuf_AddText ( va ("connect \"%s\"\n", hostcache[slist_cursor].cname) );
 		break;
 

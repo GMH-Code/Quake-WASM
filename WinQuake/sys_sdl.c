@@ -432,6 +432,15 @@ void wasm_sync_fs(void)
 		});
 	);
 }
+
+void wasm_capture_mouse(void)
+{
+	// Ensure the pointer is captured in the canvas
+	EM_ASM(
+		if (typeof Module.captureMouse === 'function')
+			Module.captureMouse();
+	);
+}
 #endif
 
 int main (int c, char **v)
@@ -508,12 +517,14 @@ void main_loop(void)
             if (wasm_restore_busy())
                 return;
 
+            restore_busy = false;
+
             EM_ASM(
                 if (typeof Module.hideConsole === 'function')
                     Module.hideConsole();
             );
 
-            restore_busy = false;
+            wasm_capture_mouse();
         }
 #endif
 

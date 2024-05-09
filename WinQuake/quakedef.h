@@ -346,6 +346,7 @@ void Chase_Update (void);
 
 	qboolean SV_RecursiveHullCheck (hull_t *hull, int num, float p1f, float p2f, vec3_t p1, vec3_t p2, trace_t *trace);
 	void wasm_sync_fs(void);
+	void wasm_capture_mouse(void);
 	void main_loop(void);
 
 #ifdef GLQUAKE
