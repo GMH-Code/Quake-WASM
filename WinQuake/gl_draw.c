@@ -110,7 +110,6 @@ int Scrap_AllocBlock (int w, int h, int *x, int *y)
 {
 	int		i, j;
 	int		best, best2;
-	int		bestx;
 	int		texnum;
 
 	for (texnum=0 ; texnum<MAX_SCRAPS ; texnum++)
@@ -145,6 +144,8 @@ int Scrap_AllocBlock (int w, int h, int *x, int *y)
 	}
 
 	Sys_Error ("Scrap_AllocBlock: full");
+
+	return 0; // Should never be called
 }
 
 int	scrap_uploads;
@@ -369,13 +370,12 @@ void Draw_Init (void)
 {
 	int		i;
 	qpic_t	*cb;
-	byte	*dest, *src;
+	byte	*dest;
 	int		x, y;
 	char	ver[40];
 	glpic_t	*gl;
 	int		start;
 	byte	*ncdata;
-	int		f, fstep;
 
 
 	Cvar_RegisterVariable (&gl_nobind);
@@ -498,10 +498,6 @@ smoothly scrolled off.
 */
 void Draw_Character (int x, int y, int num)
 {
-	byte			*dest;
-	byte			*source;
-	unsigned short	*pusdest;
-	int				drawline;	
 	int				row, col;
 	float			frow, fcol, size;
 
@@ -569,9 +565,6 @@ Draw_AlphaPic
 */
 void Draw_AlphaPic (int x, int y, qpic_t *pic, float alpha)
 {
-	byte			*dest, *source;
-	unsigned short	*pusdest;
-	int				v, u;
 	glpic_t			*gl;
 
 	if (scrap_dirty)
@@ -606,9 +599,6 @@ Draw_Pic
 */
 void Draw_Pic (int x, int y, qpic_t *pic)
 {
-	byte			*dest, *source;
-	unsigned short	*pusdest;
-	int				v, u;
 	glpic_t			*gl;
 
 	if (scrap_dirty)
@@ -636,10 +626,6 @@ Draw_TransPic
 */
 void Draw_TransPic (int x, int y, qpic_t *pic)
 {
-	byte	*dest, *source, tbyte;
-	unsigned short	*pusdest;
-	int				v, u;
-
 	if (x < 0 || (unsigned)(x + pic->width) > vid.width || y < 0 ||
 		 (unsigned)(y + pic->height) > vid.height)
 	{
@@ -659,14 +645,12 @@ Only used for the player color selection menu
 */
 void Draw_TransPicTranslate (int x, int y, qpic_t *pic, byte *translation)
 {
-	int				v, u, c;
+	int				v, u;
 	unsigned		trans[64*64], *dest;
 	byte			*src;
 	int				p;
 
 	GL_Bind (translate_texture);
-
-	c = pic->width * pic->height;
 
 	dest = trans;
 	for (v=0 ; v<64 ; v++, dest += 64)
@@ -1092,9 +1076,6 @@ void GL_Upload8_EXT (byte *data, int width, int height,  qboolean mipmap, qboole
 {
 	int			i, s;
 	qboolean	noalpha;
-	int			p;
-	static unsigned j;
-	int			samples;
     static	unsigned char scaled[1024*512];	// [512*256];
 	int			scaled_width, scaled_height;
 
@@ -1129,7 +1110,7 @@ void GL_Upload8_EXT (byte *data, int width, int height,  qboolean mipmap, qboole
 	if (scaled_width * scaled_height > sizeof(scaled))
 		Sys_Error ("GL_LoadTexture: too big");
 
-	samples = 1; // alpha ? gl_alpha_format : gl_solid_format;
+	// samples = 1; // alpha ? gl_alpha_format : gl_solid_format;
 
 	texels += scaled_width * scaled_height;
 
@@ -1235,8 +1216,7 @@ GL_LoadTexture
 */
 int GL_LoadTexture (char *identifier, int width, int height, byte *data, qboolean mipmap, qboolean alpha)
 {
-	qboolean	noalpha;
-	int			i, p, s;
+	int			i;
 	gltexture_t	*glt;
 
 	// see if the texture is allready present

@@ -4,7 +4,7 @@
 # Compiler / linker parameters
 CC := emcc
 CFLAGS := -O3 -ffast-math -funroll-loops -fomit-frame-pointer -Wall -Wextra -Wno-implicit-function-declaration \
-	-Wno-unused-parameter -Wno-missing-field-initializers -sUSE_SDL=2 -DSDL
+	-Wno-unused-parameter -Wno-missing-field-initializers -Wno-sign-compare -Wno-pointer-sign -sUSE_SDL=2 -DSDL
 LDFLAGS := -O3 -sUSE_SDL=2 -sINITIAL_MEMORY=64MB -sTOTAL_STACK=2MB -sALLOW_MEMORY_GROWTH --preload-file=id1 \
 	--shell-file shell.html -lidbfs.js
 TARGET := index.html
@@ -68,7 +68,7 @@ ifeq ($(GLQUAKE), 1)
 	gl_test.c \
 	gl_warp.c
 
-	CFLAGS += -Wno-unknown-pragmas -Wno-macro-redefined -Wno-pointer-sign -DGLQUAKE -I$(GL4ES)/include
+	CFLAGS += -DGLQUAKE -I$(GL4ES)/include
 	LDFLAGS += $(GL4ES)/lib/libGL.a -sFULL_ES2=1
 else
 	SRCS += \

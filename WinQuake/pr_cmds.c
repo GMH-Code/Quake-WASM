@@ -1337,10 +1337,8 @@ void PF_aim (void)
 	int		i, j;
 	trace_t	tr;
 	float	dist, bestdist;
-	float	speed;
 	
 	ent = G_EDICT(OFS_PARM0);
-	speed = G_FLOAT(OFS_PARM1);
 
 	VectorCopy (ent->v.origin, start);
 	start[2] += 20;

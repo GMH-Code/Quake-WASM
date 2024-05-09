@@ -1132,12 +1132,11 @@ COM_Init
 */
 void COM_Init (char *basedir)
 {
-	byte    swaptest[2] = {1,0};
-
 // set the byte swapping variables in a portable manner 
 #ifdef __EMSCRIPTEN__
 	if (1)  // Emscripten is always little endian
 #else
+	byte    swaptest[2] = {1,0};
 	if ( *(short *)swaptest == 1)
 #endif
 	{

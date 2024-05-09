@@ -19,9 +19,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 // disable data conversion warnings
 
+#ifndef __EMSCRIPTEN__
 #pragma warning(disable : 4244)     // MIPS
 #pragma warning(disable : 4136)     // X86
 #pragma warning(disable : 4051)     // ALPHA
+#endif
   
 #ifdef _WIN32
 #include <windows.h>
@@ -237,6 +239,7 @@ void GL_Bind (int texnum);
 #define    TEXTURE1_SGIS				0x835F
 
 #ifndef _WIN32
+#undef APIENTRY
 #define APIENTRY /* */
 #endif
 

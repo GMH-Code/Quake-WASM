@@ -335,7 +335,9 @@ void CL_ParseUpdate (int bits)
 	qboolean	forcelink;
 	entity_t	*ent;
 	int			num;
+#ifdef GLQUAKE
 	int			skin;
+#endif
 
 	if (cls.signon == SIGNONS - 1)
 	{	// first update is the final signon stage
@@ -356,9 +358,11 @@ void CL_ParseUpdate (int bits)
 
 	ent = CL_EntityNum (num);
 
-for (i=0 ; i<16 ; i++)
-if (bits&(1<<i))
-	bitcounts[i]++;
+	for (i=0 ; i<16 ; i++)
+	{
+		if (bits&(1<<i))
+			bitcounts[i]++;
+	}
 
 	if (ent->msgtime != cl.mtime[1])
 		forcelink = true;	// no previous frame to lerp from

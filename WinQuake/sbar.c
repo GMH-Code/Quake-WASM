@@ -1166,8 +1166,7 @@ Sbar_DeathmatchOverlay
 */
 void Sbar_MiniDeathmatchOverlay (void)
 {
-	qpic_t			*pic;
-	int				i, k, l;
+	int				i, k;
 	int				top, bottom;
 	int				x, y, f;
 	char			num[12];
@@ -1184,7 +1183,6 @@ void Sbar_MiniDeathmatchOverlay (void)
 	Sbar_SortFrags ();
 
 // draw the text
-	l = scoreboardlines;
 	y = vid.height - sb_lines;
 	numlines = sb_lines/8;
 	if (numlines < 3)
