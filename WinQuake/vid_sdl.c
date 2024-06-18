@@ -663,6 +663,19 @@ void Sys_SendKeyEvents(void)
 #endif
                 break;
 
+            case SDL_MOUSEWHEEL:
+                if (event.wheel.y > 0)
+                {
+                    Key_Event(K_MWHEELUP, true);
+                    Key_Event(K_MWHEELUP, false);
+                }
+                else if (event.wheel.y < 0)
+                {
+                    Key_Event(K_MWHEELDOWN, true);
+                    Key_Event(K_MWHEELDOWN, false);
+                }
+                break;
+
             case SDL_QUIT:
                 CL_Disconnect ();
                 Host_ShutdownServer(false);        
