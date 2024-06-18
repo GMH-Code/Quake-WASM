@@ -49,10 +49,10 @@ int    VGA_width, VGA_height, VGA_rowbytes, VGA_bufferrowbytes = 0;
 byte    *VGA_pagebase;
 
 static SDL_Window *window = NULL;
-
 static qboolean mouse_avail;
 static float   mouse_x, mouse_y;
 static int mouse_oldbuttonstate = 0;
+
 #ifdef __EMSCRIPTEN__
 static qboolean mouse_ready = false;
 #endif
@@ -60,7 +60,6 @@ static qboolean mouse_ready = false;
 // No support for option menus
 void (*vid_menudrawfn)(void) = NULL;
 void (*vid_menukeyfn)(int key) = NULL;
-SDL_Color colors[256];
 
 #ifdef GLQUAKE
 viddef_t vid;  // Global video state
@@ -80,8 +79,9 @@ extern viddef_t vid;  // Global video state
 static SDL_Renderer *renderer = NULL;
 static SDL_Texture *texture = NULL;
 static SDL_PixelFormat *format = NULL;
-Uint8 *pixels = NULL;  // Background 8-bit framebuffer
-byte force_entire_redraw = 0;
+static Uint8 *pixels = NULL;  // Background 8-bit framebuffer
+static uint32_t colors[256];  // Aligned 24-bit palette map
+static qboolean force_entire_redraw = false;
 #endif
 
 #ifndef GLQUAKE
@@ -98,8 +98,7 @@ void render_rgb(uint32_t* rgb_values, int x, int y, int width, int height)
         for (xp = x; xp < x2; xp++)
         {
             loc = offset + xp;
-            SDL_Color col = colors[pixels[loc]];
-            rgb_values[loc] = SDL_MapRGB(format, col.r, col.g, col.b);
+            rgb_values[loc] = colors[pixels[loc]];
         }
     }
 }
@@ -162,15 +161,14 @@ void    VID_SetPalette (unsigned char *palette)
 
     for ( i=0; i<256; ++i )
     {
-        colors[i].r = *palette++;
-        colors[i].g = *palette++;
-        colors[i].b = *palette++;
+        colors[i] = (palette[0] << 16) | (palette[1] << 8) | palette[2];
+        palette += 3;
     }
 
     // Palette changes can affect pixels outside the update regions (such as
     // the status area), so we have to force an update to the entire texture.
     // We can, however, wait for the texture to actually be rendered.
-    force_entire_redraw = 1;
+    force_entire_redraw = true;
 #endif
 }
 
@@ -476,7 +474,7 @@ void    VID_Update (vrect_t *rects)
     {
         // Render everything
         render_rgb(rbg_pixels_i, 0, 0, VGA_width, VGA_height);
-        force_entire_redraw = 0;
+        force_entire_redraw = false;
     }
     else
     {
@@ -525,7 +523,7 @@ void D_EndDirectRect (int x, int y, int width, int height)
     // Rendering the 'loading' icon here results in slowdown when reading
     // multiple files in sequence, so wait for a screen update before
     // redrawing.
-    force_entire_redraw = 1;
+    force_entire_redraw = true;
 }
 #endif
 

@@ -90,7 +90,7 @@ Testing involved:
 
 ### Quake-WASM vs. WebAssembly DosBox
 
-This version performed about 90 - 95 times faster than it did with the WebAssembly version of DosBox, with the optimised x86 assembler code compiled and linked.  DosBox is obviously going to be at a serious disadvantage here since running a general-purpose x86 emulator in a web browser is very inefficient; *Quake-WASM* bypasses that layer and so is closer to native code.
+This version performed about 95 - 105 times faster than it did with the WebAssembly version of DosBox, with the optimised x86 assembler code compiled and linked.  DosBox is obviously going to be at a serious disadvantage here since running a general-purpose x86 emulator in a web browser is very inefficient; *Quake-WASM* bypasses that layer and so is closer to native code.
 
 ### Quake-WASM vs. Native DosBox
 
